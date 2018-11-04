@@ -1,5 +1,8 @@
 import os
+import sys
 from setuptools import find_packages, setup
+sys.path.insert(0, 'django_searchable')
+from version import __version__
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
