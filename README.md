@@ -1,4 +1,4 @@
-# django-searchable
+# django\_searchable
 
 ## Summary
 
@@ -34,7 +34,7 @@ JSON-based search functionality is provided:
 }
 ```
 
-django-searchable is smart in figuring out how to join those models
+django\_searchable is smart in figuring out how to join those models
 together and return a useful search results.
 
 ## Example
