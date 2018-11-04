@@ -1,0 +1,25 @@
+from __future__ import absolute_import, print_function
+from django.test import TestCase
+from django_searchable.parsers.json import JSONParser
+from django_searchable.serializers.django import DjangoSerializer
+from ..models import Author
+from ..parsers.test_json import query1, query2
+
+expected_query1 = """(AND: ('name__iexact', 'test'), (NOT (AND: (u'book__title__icontains', 'c'))), (u'book__chapter__comment__istartswith', 'The '))"""
+
+expected_query2 = """(AND: (u'book__chapter__title__icontains', 'foo'))"""
+
+class DjangoSerializerTest(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+    def testDjangoSQLSerializer(self):
+        parser = JSONParser()
+        dom = parser.parse(query1)
+        query = dom.serialize(DjangoSerializer(Author))
+        self.assertEqual(str(query), expected_query1)
+
+        parser = JSONParser()
+        dom = parser.parse(query2)
+        query = dom.serialize(DjangoSerializer(Author))
+        self.assertEqual(str(query), expected_query2)
