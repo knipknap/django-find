@@ -2,7 +2,7 @@
 
 ## Summary
 
-django-netparser is a Django app that makes it easy to add complex
+django\_searchable is a Django app that makes it easy to add complex
 search functionality to your project. It supports two different ways
 to search your Django models: Query-based, or JSON-based.
 
