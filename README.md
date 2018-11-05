@@ -107,7 +107,13 @@ pagination.
 
 django-find is installed like any other Django app:
 
-1. Add "django\_find" to your `INSTALLED_APPS` setting like this::
+1. Install from PIP:
+
+    ```
+    pip install django-find
+    ```
+
+2. Add "django\_find" to your `INSTALLED_APPS` setting like this::
 
     ```python
     INSTALLED_APPS = [
@@ -116,10 +122,10 @@ django-find is installed like any other Django app:
     ]
     ```
 
-2. Include the django\_find URLconf in your project urls.py like this::
+3. Include the django\_find URLconf in your project urls.py like this::
 
     ```python
     path('django_find/', include('django_find.urls')),
     ```
 
-3. Run `python manage.py migrate` to create the django\_find models.
+4. Run `python manage.py migrate` to create the django\_find models.
