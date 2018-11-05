@@ -51,7 +51,7 @@ together and return a useful result.
 ## Quick start
 
 Enabling the functionality is as simple as adding the "Searchable"
-decorator. Example:
+mixin. Example:
 
 ```python
 from django.db import models
