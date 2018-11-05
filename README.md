@@ -23,10 +23,10 @@ searches, to complex boolean logic.
 
 ### JSON-based search
 
-To make it easy to do complex searches spanning multiple models. For
-example, you may want to allow for custom searches that let the user choose
-which models and columns to include. In other words, a user interface like
-this:
+To make it easy to do complex searches spanning multiple models, another
+method is provided. For example, you may want to allow for custom searches
+that let the user choose which models and columns to include.
+In other words, a user interface like this:
 
 ![Custom Search](https://raw.githubusercontent.com/knipknap/django-find/master/docs/custom.png)
 
