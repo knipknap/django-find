@@ -23,8 +23,14 @@ searches, to complex boolean logic.
 
 ### JSON-based search
 
-To make it easy to do complex searches spanning multiple models, a
-JSON-based search functionality is provided:
+To make it easy to do complex searches spanning multiple models. For
+example, you may want to allow for custom searches that let the user choose
+which models and columns to include. In other words, a user interface like
+this:
+
+![Custom Search](https://raw.githubusercontent.com/knipknap/django-find/master/docs/custom.png)
+
+For this, a JSON-based search functionality is provided:
 
 ```
 {
@@ -35,9 +41,9 @@ JSON-based search functionality is provided:
 ```
 
 django-find is smart in figuring out how to join those models
-together and return a useful search results.
+together and return a useful result.
 
-## Example
+## Quick start
 
 Enabling the functionality is as simple as the following:
 
@@ -97,7 +103,9 @@ You can pass the PaginatedRawQuerySet to Django templates as you
 would with a Django QuerySet, as it supports slicing and
 pagination.
 
-## Quick start
+## Installation
+
+django-find is installed like any other Django app:
 
 1. Add "django\_find" to your `INSTALLED_APPS` setting like this::
 
