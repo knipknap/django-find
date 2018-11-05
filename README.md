@@ -49,7 +49,7 @@ Enabling the functionality is as simple as the following:
 
 1. Make sure your model inherits the `Searchable` mixin. A word of
    caution: Inherit from models.Model first, then Searchable.
-2. Add a "find" attribute to your models, that lists the
+2. Add a "searchable" attribute to your models, that lists the
    aliases and maps them to a Django field using Django's selector
    syntax (underscore-separated field names).
 
@@ -62,7 +62,7 @@ from django_find import Searchable
 class Author(models.Model, Searchable):
     name = models.CharField("Author Name", max_length=10)
 
-    find = [
+    searchable = [
         ('author', 'name'),
         ('name', 'name'),
     ]
@@ -72,7 +72,7 @@ class Book(models.Model, Searchable):
     title = models.CharField("Title", max_length=10)
     rating = models.IntegerField()
 
-    find = [
+    searchable = [
         ('author', 'author__name'),  # Note the selector syntax
         ('title', 'title'),
         ('rating', 'rating'),
