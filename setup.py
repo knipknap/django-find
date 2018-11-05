@@ -4,20 +4,25 @@ from setuptools import find_packages, setup
 sys.path.insert(0, 'django_find')
 from version import __version__
 
-with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
-    README = readme.read()
+descr = '''
+django-find is a Django app that makes it easy to add complex
+search functionality to your project. It supports two different ways
+to search your Django models: Query-based, or JSON-based.
+
+Checkout the README.md on Github for more information.
+'''.strip()
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-find',
-    version='0.1',
+    version=__version__,
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
     description='Easily add complex search functionality to Django projects',
-    long_description=README,
+    long_description=descr,
     url='https://github.com/knipknap/django-find',
     author='Samuel Abels',
     author_email='knipknap@gmail.com',
