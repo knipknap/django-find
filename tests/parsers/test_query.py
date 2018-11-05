@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from django.test import TestCase
-from django_searchable.parsers.query import QueryParser
+from django_find.parsers.query import QueryParser
 
 name_map = {'host': 'Device.metadata_id',
             'model': 'Device.model',

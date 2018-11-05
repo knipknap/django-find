@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function
 from django.test import TestCase
-from django_searchable.models import Searchable
-from django_searchable.refs import get_subclasses, child_classes, parent_classes, \
+from django_find import Searchable
+from django_find.refs import get_subclasses, child_classes, parent_classes, \
         get_field_to, get_join_for, get_object_vector_to
 from .models import Author, DerivedAuthor, SecondAuthor, Book, Chapter
 

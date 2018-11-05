@@ -1,8 +1,8 @@
-# django\_searchable
+# django-find
 
 ## Summary
 
-django\_searchable is a Django app that makes it easy to add complex
+**django-find** is a Django app that makes it easy to add complex
 search functionality to your project. It supports two different ways
 to search your Django models: Query-based, or JSON-based.
 
@@ -34,7 +34,7 @@ JSON-based search functionality is provided:
 }
 ```
 
-django\_searchable is smart in figuring out how to join those models
+django-find is smart in figuring out how to join those models
 together and return a useful search results.
 
 ## Example
@@ -43,7 +43,7 @@ Enabling the functionality is as simple as the following:
 
 1. Make sure your model inherits the `Searchable` mixin. A word of
    caution: Inherit from models.Model first, then Searchable.
-2. Add a "searchable" attribute to your models, that lists the
+2. Add a "find" attribute to your models, that lists the
    aliases and maps them to a Django field using Django's selector
    syntax (underscore-separated field names).
 
@@ -51,12 +51,12 @@ Example:
 
 ```python
 from django.db import models
-from django_searchable import Searchable
+from django_find import Searchable
 
 class Author(models.Model, Searchable):
     name = models.CharField("Author Name", max_length=10)
 
-    searchable = [
+    find = [
         ('author', 'name'),
         ('name', 'name'),
     ]
@@ -66,7 +66,7 @@ class Book(models.Model, Searchable):
     title = models.CharField("Title", max_length=10)
     rating = models.IntegerField()
 
-    searchable = [
+    find = [
         ('author', 'author__name'),  # Note the selector syntax
         ('title', 'title'),
         ('rating', 'rating'),
@@ -94,23 +94,24 @@ for row in query:
 ```
 
 You can pass the PaginatedRawQuerySet to Django templates as you
-would with a Django QuerySet, as it supports slicing/pagination.
+would with a Django QuerySet, as it supports slicing and
+pagination.
 
 ## Quick start
 
-1. Add "django\_searchable" to your `INSTALLED_APPS` setting like this::
+1. Add "django\_find" to your `INSTALLED_APPS` setting like this::
 
     ```python
     INSTALLED_APPS = [
         ...
-        'django_searchable',
+        'django_find',
     ]
     ```
 
-2. Include the django\_searchable URLconf in your project urls.py like this::
+2. Include the django\_find URLconf in your project urls.py like this::
 
     ```python
-    path('django_searchable/', include('django_searchable.urls')),
+    path('django_find/', include('django_find.urls')),
     ```
 
-3. Run `python manage.py migrate` to create the django\_searchable models.
+3. Run `python manage.py migrate` to create the django\_find models.

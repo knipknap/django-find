@@ -1,7 +1,7 @@
 import os
 import sys
 from setuptools import find_packages, setup
-sys.path.insert(0, 'django_searchable')
+sys.path.insert(0, 'django_find')
 from version import __version__
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
@@ -11,14 +11,14 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='django_searchable',
+    name='django-find',
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
     description='Easily add complex search functionality to Django projects',
     long_description=README,
-    url='https://github.com/knipknap/django_searchable',
+    url='https://github.com/knipknap/django-find',
     author='Samuel Abels',
     author_email='knipknap@gmail.com',
     classifiers=[

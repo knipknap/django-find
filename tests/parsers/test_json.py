@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from django.test import TestCase
-from django_searchable.parsers.json import JSONParser
+from django_find.parsers.json import JSONParser
 
 query1 = '''
 {

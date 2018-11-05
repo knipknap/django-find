@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function
 from django.test import TestCase
-from django_searchable.parsers.json import JSONParser
-from django_searchable.serializers.django import DjangoSerializer
+from django_find.parsers.json import JSONParser
+from django_find.serializers.django import DjangoSerializer
 from ..models import Author
 from ..parsers.test_json import query1, query2
 

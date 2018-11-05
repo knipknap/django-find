@@ -1,5 +1,5 @@
 from django.db import models
-from django_searchable.models import Searchable
+from django_find import Searchable
 
 class DummyModel(models.Model, Searchable):
     hostname = models.CharField(max_length=10)

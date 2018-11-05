@@ -1,4 +1,4 @@
-NAME=django_searchable
+NAME=django_find
 VERSION=`python setup.py --version | sed s/^v//`
 PREFIX=/usr/local/
 BIN_DIR=$(PREFIX)/bin
@@ -68,5 +68,5 @@ dist: targz tarbz wheel
 ###################################################################
 dist-publish:
 	./version.sh
-	python setup.py bdist_wheel --universal upload
+	twine upload dist/*
 	./version.sh --reset

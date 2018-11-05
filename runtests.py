@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 import glob
 import os
 import sys
@@ -14,7 +14,7 @@ sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '..')))
 # Unfortunately, apps can not be installed via ``modify_settings``
 # decorator, because it would miss the database setup.
 CUSTOM_INSTALLED_APPS = (
-    'django_searchable',
+    'django_find',
     'tests',
     'django.contrib.admin',
 )
