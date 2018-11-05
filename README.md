@@ -122,10 +122,5 @@ django-find is installed like any other Django app:
     ]
     ```
 
-3. Include the django\_find URLconf in your project urls.py like this::
-
-    ```python
-    path('django_find/', include('django_find.urls')),
-    ```
-
-4. Run `python manage.py migrate` to create the django\_find models.
+That is all! You can continue by adding the Searchable decorator
+to your models as shown above.
