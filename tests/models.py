@@ -8,9 +8,6 @@ class DummyModel(models.Model, Searchable):
 
     searchable = [
         ('host', 'hostname'),
-        ('hostname', 'hostname'),
-        ('address', 'address'),
-        ('model', 'model'),
     ]
 
     class Meta:
@@ -22,8 +19,6 @@ class Author(models.Model, Searchable):
 
     searchable = [
         ('author', 'name'),
-        ('name', 'name'),
-        ('rating', 'rating'),
     ]
 
     class Meta:
@@ -41,9 +36,6 @@ class Book(models.Model, Searchable):
 
     searchable = [
         ('author', 'author__name'),
-        ('title', 'title'),
-        ('comment', 'comment'),
-        ('rating', 'rating'),
     ]
 
     class Meta:
@@ -56,8 +48,6 @@ class Chapter(models.Model, Searchable):
 
     searchable = [
         ('book', 'book__title'),
-        ('title', 'title'),
-        ('comment', 'comment'),
     ]
 
     class Meta:
@@ -71,6 +61,13 @@ class SecondAuthor(models.Model, Searchable):
         ('author', 'author__name'),
         ('book', 'book_title'),
     ]
+
+    class Meta:
+        app_label = 'search_tests'
+
+class SimpleModel(models.Model, Searchable):
+    title = models.CharField(max_length=10)
+    comment = models.CharField(max_length=10)
 
     class Meta:
         app_label = 'search_tests'

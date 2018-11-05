@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from django.test import TestCase
 from .models import Author, DerivedAuthor, SecondAuthor, Book, Chapter, \
-        DummyModel
+        DummyModel, SimpleModel
 
 class SearchableTest(TestCase):
     def setUp(self):
@@ -63,12 +63,18 @@ class SearchableTest(TestCase):
         self.assertTrue('%testme%' in query)
 
     def testByQueryRaw(self):
+        query, fields = SimpleModel.by_query_raw('testme AND comment:foo')
+        self.assertTrue('WHERE ' in query.raw_query)
+        self.assertTrue('%testme%' in query.raw_query)
+        self.failIf('SimpleModel' in query.raw_query)
+        self.assertEqual(['SimpleModel.title', 'SimpleModel.comment'], fields)
+
         query, fields = Author.by_query_raw('testme AND name:foo')
         self.assertTrue('WHERE ' in query.raw_query)
         self.assertTrue('%testme%' in query.raw_query)
         self.failIf('Author' in query.raw_query)
         self.failIf('Book' in query.raw_query)
-        self.assertEqual(['Author.author', 'Author.name', 'Author.rating'], fields)
+        self.assertEqual(['Author.name', 'Author.rating', 'Author.author'], fields)
 
         query, fields = Book.by_query_raw('rating:5')
         self.assertTrue('WHERE ' in query.raw_query)

@@ -30,6 +30,18 @@ class Searchable(object):
     searchable_labels = {}
 
     @classmethod
+    def get_default_searchable(cls):
+        return OrderedDict((f.name, f.name) for f in cls._meta.get_fields()
+                           if not f.auto_created)
+
+    @classmethod
+    def get_searchable(cls):
+        result = cls.get_default_searchable()
+        if hasattr(cls, 'searchable'):
+            result.update(OrderedDict(cls.searchable))
+        return tuple(i for i in result.items() if i[1])
+
+    @classmethod
     def get_caption_from_target_name(cls, target_name):
         caption = cls.searchable_labels.get(target_name)
         if caption:
@@ -77,7 +89,7 @@ class Searchable(object):
 
     @classmethod
     def get_field_names(cls):
-        return OrderedDict(cls.searchable).keys()
+        return OrderedDict(cls.get_searchable()).keys()
 
     @classmethod
     def get_full_field_names(cls):
@@ -91,7 +103,7 @@ class Searchable(object):
     def table_headers(cls):
         targets = set()
         result = []
-        for item in cls.searchable:
+        for item in cls.get_searchable():
             target = item[1]
             if target in targets:
                 continue
@@ -103,7 +115,7 @@ class Searchable(object):
     def search_criteria(cls):
         targets = set()
         result = []
-        for alias, target_name in cls.searchable:
+        for alias, target_name in cls.get_searchable():
             if target_name in targets:
                 continue
             targets.add(target_name)
@@ -156,7 +168,7 @@ class Searchable(object):
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        return dict(cls.searchable)[name]
+        return dict(cls.get_searchable())[name]
 
     @classmethod
     def get_object_vector_to(cls, search_cls):
@@ -248,7 +260,7 @@ class Searchable(object):
     @classmethod
     def dom_from_query(cls, query):
         fields = {}
-        for alias, target_name in cls.searchable:
+        for alias, target_name in cls.get_searchable():
             fields[alias] = cls.__name__+'.'+alias
         default_fields = cls.get_field_names()
         query_parser = QueryParser(fields, default_fields)

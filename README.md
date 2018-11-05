@@ -43,17 +43,11 @@ For this, a JSON-based search functionality is provided:
 django-find is smart in figuring out how to join those models
 together and return a useful result.
 
+
 ## Quick start
 
-Enabling the functionality is as simple as the following:
-
-1. Make sure your model inherits the `Searchable` mixin. A word of
-   caution: Inherit from models.Model first, then Searchable.
-2. Add a "searchable" attribute to your models, that lists the
-   aliases and maps them to a Django field using Django's selector
-   syntax (underscore-separated field names).
-
-Example:
+Enabling the functionality is as simple as adding the "Searchable"
+decorator. Example:
 
 ```python
 from django.db import models
@@ -62,21 +56,11 @@ from django_find import Searchable
 class Author(models.Model, Searchable):
     name = models.CharField("Author Name", max_length=10)
 
-    searchable = [
-        ('author', 'name'),
-        ('name', 'name'),
-    ]
-
 class Book(models.Model, Searchable):
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    title = models.CharField("Title", max_length=10)
-    rating = models.IntegerField()
-
-    searchable = [
-        ('author', 'author__name'),  # Note the selector syntax
-        ('title', 'title'),
-        ('rating', 'rating'),
-    ]
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='Author')
+    title = models.CharField("Title", max_length=80)
+    rating = models.IntegerField("Rating")
+    internal_id = models.CharField(max_length=10)
 ```
 
 That is all, your models now provide the following methods:
@@ -102,6 +86,29 @@ for row in query:
 You can pass the PaginatedRawQuerySet to Django templates as you
 would with a Django QuerySet, as it supports slicing and
 pagination.
+
+In most cases, you also want to specify some other, related
+fields that can be searched, or exclude some columns from the search.
+The following example shows how to do that.
+
+```python
+class Book(models.Model, Searchable):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='Author')
+    title = models.CharField("Title", max_length=10)
+    rating = models.IntegerField("Rating")
+    internal_id = models.CharField(max_length=10)
+
+    searchable = [
+        ('author', 'author__name'),  # Search the name instead of the id of the related model. Note the selector syntax
+        ('stars', 'rating'),         # Add an extra alias for "rating" that can be used in a query.
+        ('internal_id', False),      # Exclude from search
+    ]
+```
+
+In other words, add a "searchable" attribute to your models, that lists the
+aliases and maps them to a Django field using Django's selector syntax
+(underscore-separated field names).
+
 
 ## Installation
 
