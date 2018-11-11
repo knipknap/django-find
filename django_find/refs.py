@@ -212,12 +212,9 @@ def get_join_for(vector):
         # or the other way around.
         field = get_field_to(last_cls, thecls)
         if field:
-            #print "FORWARD RESULT", last_cls, thecls, field, type(field)
             if isinstance(field, models.fields.related.ManyToManyField):
                 through_model = getattr(last_cls, field.attname).through
-                through_table, through_left, through_right = \
-                        _class2through_columns(last_cls, through_model)
-                result.append((through_table, through_left, through_right))
+                result.append(_class2through_columns(last_cls, through_model))
                 left, right = _through2class_columns(through_model, thecls)
             else:
                 left, right = field.get_reverse_joining_columns()[0]
@@ -228,12 +225,9 @@ def get_join_for(vector):
             if field is None:
                 raise AttributeError('JOIN for unconnected objects is not possible')
 
-            #print "BACKWARD RESULT", thecls, last_cls, field, type(field)
             if isinstance(field, models.fields.related.ManyToManyField):
                 through_model = getattr(thecls, field.attname).through
-                through_table, through_left, through_right = \
-                        _class2through_columns(last_cls, through_model)
-                result.append((through_table, through_left, through_right))
+                result.append(_class2through_columns(last_cls, through_model))
                 left, right = _through2class_columns(through_model, thecls)
             else:
                 left, right = field.get_joining_columns()[0]
