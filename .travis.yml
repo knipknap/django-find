@@ -4,11 +4,12 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
 # command to install dependencies
 install:
   - "pip install -r requirements.txt"
   - "pip install coveralls"
 # command to run tests
-script: travis_wait coverage run runtests.py
+script: travis_wait coverage run runtests.py --source=django_find
 after_success:
   coveralls
