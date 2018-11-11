@@ -1,25 +1,16 @@
+"""
+This module contains the Searchable mixin, the main public API of
+django-find.
+"""
 from __future__ import absolute_import, print_function
 from collections import OrderedDict
 from django.db import models
 from .parsers.query import QueryParser
 from .parsers.json import JSONParser
 from .serializers.django import DjangoSerializer
-from .serializers.sql import SQLSerializer
 from .refs import get_subclasses, get_object_vector_to, get_object_vector_for
 from .rawquery import PaginatedRawQuerySet
-
-def sql_from_dom(cls, dom, mode='SELECT', field_names=None, extra_model=None):
-    if not field_names:
-        field_names = dom.get_term_names()
-    if not field_names:
-        return 'SELECT * FROM (SELECT NULL) tbl WHERE 0', [], [] # Empty set
-    primary_cls = cls.get_primary_class_from_field_names(field_names)
-    serializer = SQLSerializer(primary_cls,
-                               mode=mode,
-                               field_names=field_names,
-                               extra_model=extra_model)
-    sql, args = dom.serialize(serializer)
-    return sql, args, field_names
+from .model_helpers import sql_from_dom
 
 class Searchable(object):
     """
@@ -81,8 +72,6 @@ class Searchable(object):
             return 'INT'
         elif isinstance(field, models.AutoField):
             return 'INT'
-            #print("SKIPPING", field.name, type(field))
-            return None
         else:
             #raise TypeError('fields of type {} unsupported'.format(type(field)))
             return None
