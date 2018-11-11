@@ -1,5 +1,10 @@
 # django-find
 
+[![Build Status](https://travis-ci.org/knipknap/django-find.svg?branch=master)](https://travis-ci.org/knipknap/django-find)
+[![Coverage Status](https://coveralls.io/repos/github/knipknap/django-find/badge.svg?branch=master)](https://coveralls.io/github/knipknap/django-find?branch=master)
+[![Code Climate](https://lima.codeclimate.com/github/knipknap/django-find/badges/gpa.svg)](https://lima.codeclimate.com/github/knipknap/django-find)
+[![Documentation Status](https://readthedocs.org/projects/django-find/badge/?version=latest)](http://django-find.readthedocs.io/en/latest/?badge=latest)
+
 ## Summary
 
 **django-find** is a Django app that makes it easy to add complex
@@ -32,7 +37,7 @@ method is provided. For example, you may want to allow for custom searches
 that let the user choose which models and columns to include.
 In other words, a user interface like this:
 
-![Custom Search](https://raw.githubusercontent.com/knipknap/django-find/master/docs/custom.png)
+![Custom Search](https://raw.githubusercontent.com/knipknap/django-find/master/docs/_static/custom.png)
 
 For this, a JSON-based search functionality is provided:
 
@@ -91,47 +96,8 @@ You can pass the PaginatedRawQuerySet to Django templates as you
 would with a Django QuerySet, as it supports slicing and
 pagination.
 
-In most cases, you also want to specify some other, related
-fields that can be searched, or exclude some columns from the search.
-The following example shows how to do that.
+## Documentation
 
-```python
-class Book(models.Model, Searchable):
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='Author')
-    title = models.CharField("Title", max_length=10)
-    rating = models.IntegerField("Rating")
-    internal_id = models.CharField(max_length=10)
+Full documentation, including installation instructions, is here:
 
-    searchable = [
-        ('author', 'author__name'),  # Search the name instead of the id of the related model. Note the selector syntax
-        ('stars', 'rating'),         # Add an extra alias for "rating" that can be used in a query.
-        ('internal_id', False),      # Exclude from search
-    ]
-```
-
-In other words, add a "searchable" attribute to your models, that lists the
-aliases and maps them to a Django field using Django's selector syntax
-(underscore-separated field names).
-
-
-## Installation
-
-django-find is installed like any other Django app:
-
-1. Install from PIP:
-
-    ```
-    pip install django-find
-    ```
-
-2. Add "django\_find" to your `INSTALLED_APPS` setting like this::
-
-    ```python
-    INSTALLED_APPS = [
-        ...
-        'django_find',
-    ]
-    ```
-
-That is all! You can continue by adding the Searchable decorator
-to your models as shown above.
+http://django-find.readthedocs.io

@@ -6,25 +6,26 @@ from ..dom import Group, And, Or, Not, Term
 class JSONParser(object):
     """
     Transforms a JSON string into a DOM. The DOM is identical to what
-    QueryParser generates.
-    {
-        "Device":
+    QueryParser generates. Example JSON input::
+
         {
-            "Hostname":
-                [
-                    [["contains": "s-"],["contains": "-ea1"]],
-                    [["startswith", ""]]
-                ],
-            "Tags":
-                [
-                    [["neq":"asdasd"]]
-                ]
+            "Device":
+            {
+                "Hostname":
+                    [
+                        [["contains": "s-"],["contains": "-ea1"]],
+                        [["startswith", ""]]
+                    ],
+                "Tags":
+                    [
+                        [["neq":"asdasd"]]
+                    ]
+            }
+            "Component":
+            {
+                "Slot": [[]]
+            }
         }
-        "Component":
-        {
-            "Slot": [[]]
-        }
-    }
     """
     def parse(self, json_string):
         json_tree = json.loads(json_string, object_pairs_hook=OrderedDict)

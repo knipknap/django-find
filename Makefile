@@ -11,7 +11,7 @@ SITE_DIR=$(PREFIX)`python -c "from __future__ import print_function; import sys;
 clean:
 	find . -name "*.pyc" -o -name "*.pyo" | xargs -n1 rm -f
 	rm -Rf build *.egg-info
-	#cd doc; make clean
+	cd docs; make clean
 
 .PHONY : dist-clean
 dist-clean: clean
