@@ -101,39 +101,41 @@ def yield_all_vectors(search_cls_list, subtype):
             for vector in vectors:
                 yield vector
 
-def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
+def yield_matching_vectors(vectors, search_cls_list):
     """
-    Like get_object_vector_to(), but returns a single vector that reaches
-    all of the given classes, if it exists.
-    Only searches classes that are subtype of the given class.
+    Yields all possible vectors that connect all of the given classes.
+    The result is sorted by the position of the primary class, and
+    the vector length.
     """
-    # Prefer the path where the first wanted class is near the beginning
-    # of the vector. If there are competing ones, prefer the shortest
-    # vector among them.
-    vectors = list(yield_all_vectors(search_cls_list, subtype))
     primary_cls = search_cls_list[0]
-    def sort_by_length_and_position_of_self(vector):
+    def sort_by_length_and_pos_of_primary_cls(vector):
         try:
             pos = vector.index(primary_cls)
         except ValueError:
             pos = 0
         return float('{}.{}'.format(pos, len(vector)))
 
-    # Returns the best vectors that have all required classes.
-    # The list is sorted by the position of the wanted class, and the
-    # vector length.
-    matching = []
-    for vector in sorted(vectors, key=sort_by_length_and_position_of_self):
+    for vector in sorted(vectors, key=sort_by_length_and_pos_of_primary_cls):
         for target_cls in search_cls_list:
             if target_cls not in vector:
                 break
         else:
-            matching.append(vector)
+            yield vector
+
+def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
+    """
+    Like get_object_vector_to(), but returns a single vector that reaches
+    all of the given classes, if it exists.
+    Only searches classes that are subtype of the given class.
+    """
+    vectors = list(yield_all_vectors(search_cls_list, subtype))
+    matching = list(yield_matching_vectors(vectors, search_cls_list))
     if not matching:
         return None # No vector contains all classes
 
     # Prefer the path where the classes appear in the same order as in
     # search_cls_list.
+    primary_cls = search_cls_list[0]
     best_index = matching[0].index(primary_cls)
     for vector in matching:
         if vector.index(primary_cls) != best_index:
