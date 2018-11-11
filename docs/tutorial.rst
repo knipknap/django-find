@@ -72,9 +72,8 @@ pagination.
 
 In most cases, you also want to specify some other, related
 fields that can be searched, or exclude some columns from the search.
-The following example shows how to do that.
+The following example shows how to do that::
 
-::
         class Book(models.Model, Searchable):
             author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='Author')
             title = models.CharField("Title", max_length=10)
