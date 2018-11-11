@@ -91,21 +91,26 @@ def get_object_vector_to(cls, search_cls, subtype, avoid=None):
     path_list.sort(key=len)
     return path_list
 
+def yield_all_vectors(search_cls_list, subtype):
+    """ 
+    Yields all possible vectors between all given classes.
+    """
+    for target_cls in search_cls_list[:]:
+        for thecls in search_cls_list:
+            vectors = get_object_vector_to(thecls, target_cls, subtype)
+            for vector in vectors:
+                yield vector
+
 def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
     """
     Like get_object_vector_to(), but returns a single vector that reaches
     all of the given classes, if it exists.
     Only searches classes that are subtype of the given class.
     """
-    vectors = []
-    for target_cls in search_cls_list[:]:
-        for thecls in search_cls_list:
-            vector = get_object_vector_to(thecls, target_cls, subtype)
-            vectors += vector
-
     # Prefer the path where the first wanted class is near the beginning
     # of the vector. If there are competing ones, prefer the shortest
     # vector among them.
+    vectors = list(yield_all_vectors(search_cls_list, subtype))
     primary_cls = search_cls_list[0]
     def sort_by_length_and_position_of_self(vector):
         try:
