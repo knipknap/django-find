@@ -107,20 +107,25 @@ def yield_matching_vectors(vectors, search_cls_list):
     The result is sorted by the position of the primary class, and
     the vector length.
     """
-    primary_cls = search_cls_list[0]
+    for vector in vectors:
+        for target_cls in search_cls_list:
+            if target_cls not in vector:
+                break
+        else:
+            yield vector
+
+def sort_vectors_by_primary_cls(vectors, primary_cls):
+    """
+    Sort the vectors by the position of the primary class, and
+    the vector length.
+    """
     def sort_by_length_and_pos_of_primary_cls(vector):
         try:
             pos = vector.index(primary_cls)
         except ValueError:
             pos = 0
         return float('{}.{}'.format(pos, len(vector)))
-
-    for vector in sorted(vectors, key=sort_by_length_and_pos_of_primary_cls):
-        for target_cls in search_cls_list:
-            if target_cls not in vector:
-                break
-        else:
-            yield vector
+    return sorted(vectors, key=sort_by_length_and_pos_of_primary_cls)
 
 def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
     """
@@ -136,12 +141,9 @@ def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
     # Prefer the path where the classes appear in the same order as in
     # search_cls_list.
     primary_cls = search_cls_list[0]
-    best_index = matching[0].index(primary_cls)
+    matching = sort_vectors_by_primary_cls(matching, primary_cls)
     for vector in matching:
-        if vector.index(primary_cls) != best_index:
-            continue
-
-        # Remove extra-classes that are not explicitely requested.
+        # Remove extra classes that are not explicitly requested.
         clean_vector = [c for c in vector if c in search_cls_list]
         if clean_vector == search_cls_list:
             return vector
