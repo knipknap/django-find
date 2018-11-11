@@ -166,6 +166,44 @@ def _through2class_columns(through_model, target_cls):
     right = through_table+'.'+right
     return left, right
 
+def _get_through_model(cls, field):
+    if isinstance(field, models.fields.related.ManyToManyField):
+        return getattr(cls, field.attname).through
+    return None
+
+def _get_join_data(last_cls, to_cls):
+    result = []
+    last_table_name = last_cls._meta.db_table
+
+    # Two options: The current class has a reference to the other table,
+    # or the other way around.
+    field = get_field_to(last_cls, to_cls)
+    if field:
+        through_model = _get_through_model(last_cls, field)
+        if through_model:
+            result.append(_class2through_columns(last_cls, through_model))
+            left, right = _through2class_columns(through_model, to_cls)
+        else:
+            left, right = field.get_reverse_joining_columns()[0]
+            right = last_table_name+'.'+right
+
+    else:
+        field = get_field_to(to_cls, last_cls)
+        if field is None:
+            raise AttributeError('JOIN for unconnected objects is not possible')
+
+        through_model = _get_through_model(to_cls, field)
+        if through_model:
+            result.append(_class2through_columns(last_cls, through_model))
+            left, right = _through2class_columns(through_model, to_cls)
+        else:
+            left, right = field.get_joining_columns()[0]
+            right = last_table_name+'.'+right
+
+    table_name = to_cls._meta.db_table
+    result.append((table_name, left, right))
+    return result
+
 def get_join_for(vector):
     """
     Given a vector as returned by get_object_vector_for(), this function
@@ -201,38 +239,7 @@ def get_join_for(vector):
         LEFT JOIN inventory_unit ON inventory_unit.id=inventory_unit_component.unit_id
     """
     result = [(vector[0]._meta.db_table, None, None)]
-    #print "VECTOR", vector
-
     for pos, thecls in enumerate(vector[1:]):
         last_cls = vector[pos]
-        last_table_name = last_cls._meta.db_table
-        table_name = thecls._meta.db_table
-
-        # Two options: The current class has a reference to the other table,
-        # or the other way around.
-        field = get_field_to(last_cls, thecls)
-        if field:
-            if isinstance(field, models.fields.related.ManyToManyField):
-                through_model = getattr(last_cls, field.attname).through
-                result.append(_class2through_columns(last_cls, through_model))
-                left, right = _through2class_columns(through_model, thecls)
-            else:
-                left, right = field.get_reverse_joining_columns()[0]
-                right = last_table_name+'.'+right
-
-        else:
-            field = get_field_to(thecls, last_cls)
-            if field is None:
-                raise AttributeError('JOIN for unconnected objects is not possible')
-
-            if isinstance(field, models.fields.related.ManyToManyField):
-                through_model = getattr(thecls, field.attname).through
-                result.append(_class2through_columns(last_cls, through_model))
-                left, right = _through2class_columns(through_model, thecls)
-            else:
-                left, right = field.get_joining_columns()[0]
-                right = last_table_name+'.'+right
-
-        #print "FK", table_name, left, right
-        result.append((table_name, left, right))
+        result += _get_join_data(last_cls, thecls)
     return result
