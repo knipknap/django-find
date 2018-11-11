@@ -31,10 +31,10 @@ class JSONParser(object):
         json_tree = json.loads(json_string, object_pairs_hook=OrderedDict)
         result = Group(is_root=True)
 
-        for clsname,criteria in json_tree.iteritems():
+        for clsname, criteria in json_tree.items():
             clsgroup = And()
             result.add(clsgroup)
-            for fieldname, terms in criteria.iteritems():
+            for fieldname, terms in criteria.items():
                 fieldname = clsname + '.' + fieldname
                 fieldgroup = Or()
                 clsgroup.add(fieldgroup)

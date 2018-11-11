@@ -5,9 +5,9 @@ from django_find.serializers.django import DjangoSerializer
 from ..models import Author
 from ..parsers.test_json import query1, query2
 
-expected_query1 = """(AND: ('name__iexact', 'test'), (NOT (AND: (u'book__title__icontains', 'c'))), (u'book__chapter__comment__istartswith', 'The '))"""
+expected_query1 = """(AND: ('name__iexact', 'test'), (NOT (AND: ('book__title__icontains', 'c'))), ('book__chapter__comment__istartswith', 'The '))"""
 
-expected_query2 = """(AND: (u'book__chapter__title__icontains', 'foo'))"""
+expected_query2 = """(AND: ('book__chapter__title__icontains', 'foo'))"""
 
 class DjangoSerializerTest(TestCase):
     def setUp(self):

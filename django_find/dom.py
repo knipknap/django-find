@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+from builtins import str
 from .tree import Node
 
 class Group(Node):
@@ -69,8 +70,8 @@ class Term(Node):
     def __init__(self, name, operator, data):
         Node.__init__(self)
         self.name = name
-        self.operator = operator
-        self.data = unicode(data).encode("utf-8")
+        self.operator = str(operator)
+        self.data = str(data)
 
     def optimize(self):
         return self

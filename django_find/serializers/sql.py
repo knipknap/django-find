@@ -1,4 +1,5 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import str
 from MySQLdb import escape_string
 from ..refs import get_join_for
 from .serializer import Serializer
@@ -119,4 +120,4 @@ class SQLSerializer(Serializer):
         # and if you prefer that, you are a bad software developer.
         # (Also, I didn't find any API from Django to generate a prepared statement
         # without already executing it, e.g. django.db.connection.execute())
-        return result.format(escape_string(data))
+        return result.format(escape_string(data).decode('utf-8'))
