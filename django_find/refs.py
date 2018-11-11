@@ -141,6 +141,22 @@ def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
 
     return matching[0] # No vector contains all classes in the same order.
 
+def _class2through_columns(from_cls, through_model):
+    table_name = from_cls._meta.db_table
+    through_table = through_model._meta.db_table
+    through_left = get_field_to(through_model, from_cls).column
+    through_right = table_name+'.'+from_cls._meta.pk.column
+    return through_table, through_left, through_right
+
+def _through2class_columns(through_model, target_cls):
+    # From through-table to target class.
+    through_table = through_model._meta.db_table
+    from_field = get_field_to(through_model, target_cls)
+    through_join = from_field.get_reverse_joining_columns()
+    left, right = through_join[0]
+    right = through_table+'.'+right
+    return left, right
+
 def get_join_for(vector):
     """
     Given a vector as returned by get_object_vector_for(), this function
@@ -190,15 +206,10 @@ def get_join_for(vector):
             #print "FORWARD RESULT", last_cls, thecls, field, type(field)
             if isinstance(field, models.fields.related.ManyToManyField):
                 through_model = getattr(last_cls, field.attname).through
-                through_table = through_model._meta.db_table
-                through_left = get_field_to(through_model, last_cls).column
-                through_right = last_table_name+'.'+last_cls._meta.pk.column
-                #print "M2M", through_table, through_left, through_right
+                through_table, through_left, through_right = \
+                        _class2through_columns(last_cls, through_model)
                 result.append((through_table, through_left, through_right))
-
-                through_join = get_field_to(through_model, thecls).get_reverse_joining_columns()
-                left, right = through_join[0]
-                right = through_table+'.'+right
+                left, right = _through2class_columns(through_model, thecls)
             else:
                 left, right = field.get_reverse_joining_columns()[0]
                 right = last_table_name+'.'+right
@@ -211,15 +222,10 @@ def get_join_for(vector):
             #print "BACKWARD RESULT", thecls, last_cls, field, type(field)
             if isinstance(field, models.fields.related.ManyToManyField):
                 through_model = getattr(thecls, field.attname).through
-                through_table = through_model._meta.db_table
-                through_left = get_field_to(through_model, last_cls).column
-                through_right = last_table_name+'.'+last_cls._meta.pk.column
-                #print "M2M", through_table, through_left, through_right
+                through_table, through_left, through_right = \
+                        _class2through_columns(last_cls, through_model)
                 result.append((through_table, through_left, through_right))
-
-                through_join = get_field_to(through_model, thecls).get_reverse_joining_columns()
-                left, right = through_join[0]
-                right = through_table+'.'+right
+                left, right = _through2class_columns(through_model, thecls)
             else:
                 left, right = field.get_joining_columns()[0]
                 right = last_table_name+'.'+right
