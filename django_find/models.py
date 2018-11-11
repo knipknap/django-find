@@ -84,8 +84,8 @@ class Searchable(object):
             #print("SKIPPING", field.name, type(field))
             return None
         else:
+            #raise TypeError('fields of type {} unsupported'.format(type(field)))
             return None
-            raise TypeError('fields of type {} unsupported'.format(type(field)))
 
     @classmethod
     def get_field_names(cls):

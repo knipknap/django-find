@@ -7,6 +7,17 @@ class SearchableTest(TestCase):
     def setUp(self):
         self.maxDiff = None
 
+    def testSearchCriteria(self):
+        expected = [('Name', 'name'), ('rating', 'rating')]
+        self.assertEqual(expected, Author.search_criteria())
+
+        expected = [('Name', 'author'),
+                    ('The title', 'title'),
+                    ('comment', 'comment'),
+                    ('Stars', 'rating'),
+                    ('Author', 'something')]
+        self.assertEqual(expected, Book.search_criteria())
+
     def testGetFieldFromTargetName(self):
         func = SecondAuthor.get_field_from_target_name
         self.assertRaises(Exception, func, 'foo')

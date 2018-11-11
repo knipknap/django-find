@@ -14,7 +14,7 @@ class DummyModel(models.Model, Searchable):
         app_label = 'search_tests'
 
 class Author(models.Model, Searchable):
-    name = models.CharField(max_length=10)
+    name = models.CharField("Name", max_length=10)
     rating = models.IntegerField()
 
     searchable = [
@@ -29,13 +29,14 @@ class DerivedAuthor(Author):
         app_label = 'search_tests'
 
 class Book(models.Model, Searchable):
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    title = models.CharField(max_length=10)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='Author')
+    title = models.CharField("The title", max_length=10)
     comment = models.CharField(max_length=10)
-    rating = models.IntegerField()
+    rating = models.IntegerField("Stars")
 
     searchable = [
         ('author', 'author__name'),
+        ('something', 'author'),
     ]
 
     class Meta:
