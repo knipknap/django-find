@@ -1,9 +1,9 @@
 from django.db import connection
 
 class PaginatedRawQuerySet(object):
-    def __init__(self, raw_query, args, limit=None, offset=None):
+    def __init__(self, raw_query, args=None, limit=None, offset=None):
         self.raw_query = raw_query
-        self.args = args
+        self.args = args if args else []
         self.limit = limit
         self.offset = offset
         self.result_cache = None
