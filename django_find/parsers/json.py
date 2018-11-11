@@ -27,6 +27,31 @@ class JSONParser(object):
             }
         }
     """
+
+    def parse_operators(self, termgroup, term, fieldname):
+        for operator, value in term:
+            if operator.startswith('not'):
+                term = Not(Term(fieldname, operator[3:], value))
+            else:
+                term = Term(fieldname, operator, value)
+            termgroup.add(term)
+
+    def parse_terms(self, fieldgroup, terms, fieldname):
+        for term in terms:
+            termgroup = And()
+            fieldgroup.add(termgroup)
+            if not term:
+                termgroup.add(Term(fieldname, 'any', ''))
+                continue
+            self.parse_operators(termgroup, term, fieldname)
+
+    def parse_criteria(self, clsgroup, criteria, clsname):
+        for fieldname, terms in criteria.items():
+            fieldname = clsname + '.' + fieldname
+            fieldgroup = Or()
+            clsgroup.add(fieldgroup)
+            self.parse_terms(fieldgroup, terms, fieldname)
+
     def parse(self, json_string):
         json_tree = json.loads(json_string, object_pairs_hook=OrderedDict)
         result = Group(is_root=True)
@@ -34,21 +59,6 @@ class JSONParser(object):
         for clsname, criteria in json_tree.items():
             clsgroup = And()
             result.add(clsgroup)
-            for fieldname, terms in criteria.items():
-                fieldname = clsname + '.' + fieldname
-                fieldgroup = Or()
-                clsgroup.add(fieldgroup)
-                for term in terms:
-                    termgroup = And()
-                    fieldgroup.add(termgroup)
-                    if not term:
-                        termgroup.add(Term(fieldname, 'any', ''))
-                        continue
-                    for operator, value in term:
-                        if operator.startswith('not'):
-                            term = Not(Term(fieldname, operator[3:], value))
-                        else:
-                            term = Term(fieldname, operator, value)
-                        termgroup.add(term)
+            self.parse_criteria(clsgroup, criteria, clsname)
 
         return result.optimize()
