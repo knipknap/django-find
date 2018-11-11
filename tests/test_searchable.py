@@ -7,6 +7,13 @@ class SearchableTest(TestCase):
     def setUp(self):
         self.maxDiff = None
 
+    def testTableHeaders(self):
+        expected = ['Name', 'rating']
+        self.assertEqual(expected, Author.table_headers())
+
+        expected = ['Name', 'The title', 'comment', 'Stars', 'Author']
+        self.assertEqual(expected, Book.table_headers())
+
     def testSearchCriteria(self):
         expected = [('Name', 'name'), ('rating', 'rating')]
         self.assertEqual(expected, Author.search_criteria())
