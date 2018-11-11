@@ -14,6 +14,15 @@ tokens = [('and',          re.compile(r'and\b', re.I)),
           ('word',         re.compile(r'([^"\s\\\'\)]+)')),
           ('unknown',      re.compile(r'.'))]
 
+boolean = {'and': And, 'or': Or, 'not': Not}
+
+def open_scope(scopes, scope):
+    scopes.append(scopes[-1].add(scope))
+
+def close_scope(scopes):
+    while scopes[-1].auto_leave_scope() and not scopes[-1].is_root:
+        scopes.pop()
+
 class QueryParser(Parser):
     def __init__(self, fields, default):
         """
@@ -29,23 +38,19 @@ class QueryParser(Parser):
 
     def parse(self, query):
         self._reset()
-        self.input   = query.strip()
-        result       = Group(is_root=True)
-        current      = [result]
+        self.input = query.strip()
+        result = Group(is_root=True)
+        scopes = [result]
         token, match = self._get_next_token()
-        #print('QUERY: ', self.input)
 
         while token != 'EOF':
-            #print("TOK", repr(token))
             if token == 'word':
-                #print("WORD", repr(match.group(1)))
                 child = Or()
                 for name in self.default:
                     name = self.fields[name]
                     child.add(Term.from_query_value(name, match.group(1)))
-                current[-1].add(child)
-                while current[-1].auto_leave_scope() and current[-1] != result:
-                    current.pop()
+                scopes[-1].add(child)
+                close_scope(scopes)
                 token, match = self._get_next_token()
                 continue
 
@@ -66,58 +71,42 @@ class QueryParser(Parser):
                     token, match = self._get_next_token()
                     continue
 
-                current[-1].add(Term.from_query_value(field, " ".join(value)))
-                while current[-1].auto_leave_scope() and current[-1] != result:
-                    current.pop()
+                scopes[-1].add(Term.from_query_value(field, " ".join(value)))
+                close_scope(scopes)
 
                 token, match = self._get_next_token()
                 continue
 
-            elif token == 'and':
+            elif token == 'and' or token == 'or':
                 try:
-                    last_term = current[-1].pop()
+                    last_term = scopes[-1].pop()
                 except IndexError:
                     pass
                 else:
-                    #print("AND")
-                    current.append(current[-1].add(And(last_term)))
-                token, match = self._get_next_token()
-                continue
-
-            elif token == 'or':
-                try:
-                    last_term = current[-1].pop()
-                except IndexError:
-                    pass
-                else:
-                    #print("OR")
-                    current.append(current[-1].add(Or(last_term)))
+                    dom_cls = boolean[token]
+                    open_scope(scopes, dom_cls(last_term))
                 token, match = self._get_next_token()
                 continue
 
             elif token == 'not':
-                #print("NOT")
-                current.append(current[-1].add(Not()))
+                open_scope(scopes, Not())
                 token, match = self._get_next_token()
                 continue
 
             elif token == 'openbracket':
-                #print("OPEN")
-                current.append(current[-1].add(Group()))
+                open_scope(scopes, Group())
                 token, match = self._get_next_token()
                 continue
 
             elif token == 'closebracket':
-                #print("CLOSE")
                 # Leave the current group.
-                while type(current[-1]) != type(Group) and current[-1] != result:
-                    current.pop()
-                if current[-1] != result:
-                    current.pop()
+                while type(scopes[-1]) != type(Group) and not scopes[-1].is_root:
+                    scopes.pop()
+                if not scopes[-1].is_root:
+                    scopes.pop()
 
                 # Auto-leave the parent scope (if necessary).
-                while current[-1].auto_leave_scope() and current[-1] != result:
-                    current.pop()
+                close_scope(scopes)
                 token, match = self._get_next_token()
                 continue
 
