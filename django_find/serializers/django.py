@@ -21,6 +21,24 @@ class DjangoSerializer(Serializer):
             return ~terms[0]
         return ~self.logical_and(terms)
 
+    def boolean_term(self, selector, operator, data):
+        value = data.lower() == 'true'
+        return Q(**{selector: value})
+
+    def int_term(self, selector, operator, data):
+        try:
+            value = int(data)
+        except ValueError:
+            return Q()
+        else:
+            return Q(**{selector: value})
+
+    def str_term(self, selector, operator, data):
+        return Q(**{selector+'__'+operator: data})
+
+    def lcstr_term(self, selector, operator, data):
+        return Q(**{selector+'__i'+operator: data})
+
     def term(self, name, operator, data):
         if operator == 'any':
             return Q()
@@ -31,16 +49,12 @@ class DjangoSerializer(Serializer):
         target_type, target = cls.get_target_from_name(field_name)
         selector = self.model.get_selector_from_field_name(name)
 
-        if target_type == 'BOOL':
-            value = True if data.lower() == 'true' else False
-            return Q(**{selector: value})
-        elif target_type == 'INT':
-            try:
-                value = int(data)
-            except ValueError:
-                return Q()
-            else:
-                return Q(**{selector: value})
-        elif target_type == 'STR':
-            return Q(**{selector+'__'+operator: data})
-        return Q(**{selector+'__i'+operator: data})  # LCSTR
+        type_map = {'BOOL': self.boolean_term,
+                    'INT': self.int_term,
+                    'STR': self.str_term,
+                    'LCSTR': self.lcstr_term}
+
+        func = type_map.get(target_type)
+        if not func:
+            raise ValueError('invalid operator: '+repr(operator))
+        return func(selector, operator, data)
