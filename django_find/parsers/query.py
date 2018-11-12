@@ -24,7 +24,8 @@ def close_scope(scopes):
 class QueryParser(Parser):
     def __init__(self, fields, default):
         """
-        Field is a map that translates aliases to something like Book.author.
+        Fields is a map that translates aliases to something like
+        Book.author.
         """
         Parser.__init__(self, tokens)
         self.fields = fields
