@@ -25,8 +25,8 @@ class SearchableTest(TestCase):
                     ('Author', 'something')]
         self.assertEqual(expected, Book.search_criteria())
 
-    def testGetFieldFromTargetName(self):
-        func = SecondAuthor.get_field_from_target_name
+    def testGetFieldFromSelector(self):
+        func = SecondAuthor.get_field_from_selector
         self.assertRaises(Exception, func, 'foo')
         self.assertEqual(func('book__author__name'),
                          (Author, Author._meta.get_field('name')))
@@ -38,8 +38,8 @@ class SearchableTest(TestCase):
         self.assertEqual(func('author'), ('LCSTR', 'name'))
         self.assertEqual(func('rating'), ('INT', 'rating'))
 
-    def testGetTargetNameFromName(self):
-        func = Author.get_target_name_from_name
+    def testGetSelectorFromName(self):
+        func = Author.get_selector_from_name
         self.assertRaises(KeyError, func, 'foo')
         self.assertEqual(func('name'), 'name')
         self.assertEqual(func('author'), 'name')

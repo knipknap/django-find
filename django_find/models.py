@@ -33,11 +33,11 @@ class Searchable(object):
         return tuple(i for i in result.items() if i[1])
 
     @classmethod
-    def get_caption_from_target_name(cls, target_name):
-        caption = cls.searchable_labels.get(target_name)
+    def get_caption_from_selector(cls, selector):
+        caption = cls.searchable_labels.get(selector)
         if caption:
             return caption
-        field = cls.get_field_from_target_name(target_name)[1]
+        field = cls.get_field_from_selector(selector)[1]
         if hasattr(field, 'verbose_name'):
             return field.verbose_name
         return field.name.capitalize()
@@ -46,7 +46,7 @@ class Searchable(object):
     def get_target_type_from_field(cls, field):
         if hasattr(cls, 'search_aliases') and field.name in cls.search_aliases:
             selector = cls.search_aliases[field.name]
-            field = cls.get_field_from_target_name(selector)[1]
+            field = cls.get_field_from_selector(selector)[1]
         elif field.auto_created and not field.one_to_one:
             #print("REVERSE", field.name, field)
             return None
@@ -90,32 +90,32 @@ class Searchable(object):
 
     @classmethod
     def table_headers(cls):
-        targets = set()
+        selectors = set()
         result = []
         for item in cls.get_searchable():
-            target = item[1]
-            if target in targets:
+            selector = item[1]
+            if selector in selectors:
                 continue
-            targets.add(target)
-            result.append(cls.get_caption_from_target_name(target))
+            selectors.add(selector)
+            result.append(cls.get_caption_from_selector(selector))
         return result
 
     @classmethod
     def search_criteria(cls):
-        targets = set()
+        selectors = set()
         result = []
-        for alias, target_name in cls.get_searchable():
-            if target_name in targets:
+        for alias, selector in cls.get_searchable():
+            if selector in selectors:
                 continue
-            targets.add(target_name)
-            caption = cls.get_caption_from_target_name(target_name)
+            selectors.add(selector)
+            caption = cls.get_caption_from_selector(selector)
             result.append((caption, alias))
         return result
 
     @classmethod
-    def get_field_from_target_name(cls, name):
+    def get_field_from_selector(cls, name):
         """
-        Given the target name, e.g. device__metadata__name, this returns the class
+        Given a django selector, e.g. device__metadata__name, this returns the class
         and the Django field of the model, as returned by Model._meta.get_field().
         Example::
 
@@ -142,13 +142,13 @@ class Searchable(object):
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        target_name = cls.get_target_name_from_name(name)
-        field = cls.get_field_from_target_name(target_name)[1]
+        selector = cls.get_selector_from_name(name)
+        field = cls.get_field_from_selector(selector)[1]
         target_type = cls.get_target_type_from_field(field)
-        return target_type, target_name
+        return target_type, selector
 
     @classmethod
-    def get_target_name_from_name(cls, name):
+    def get_selector_from_name(cls, name):
         """
         Like get_target_from_name(), but returns the following form::
 
@@ -217,9 +217,9 @@ class Searchable(object):
         """
         # Get the target class and attribute by parsing the name.
         target_cls, field_name = cls.get_class_from_field_name(name)
-        target = target_cls.get_target_name_from_name(field_name)
+        selector = target_cls.get_selector_from_name(field_name)
         if target_cls == cls:
-            return target
+            return selector
 
         # Prefix the target by the class names.
         path_list = get_object_vector_to(cls, target_cls, Searchable)
@@ -228,7 +228,7 @@ class Searchable(object):
         for thecls in path[1:]:
             prefix += thecls.__name__.lower() + '__'
             if thecls == target_cls:
-                return prefix+target
+                return prefix+selector
 
         raise Exception('BUG: class %s not in path %s' % (target_cls, path))
 

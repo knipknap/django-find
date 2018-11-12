@@ -31,8 +31,8 @@ class SQLSerializer(Serializer):
         result = []
         for field_name in field_names:
             model, name = self.model.get_class_from_field_name(field_name)
-            target_name = model.get_target_name_from_name(name)
-            target_model, field = model.get_field_from_target_name(target_name)
+            selector = model.get_selector_from_name(name)
+            target_model, field = model.get_field_from_selector(selector)
             result.append((field_name, target_model, target_model._meta.db_table, field.column))
         return result
 
@@ -99,8 +99,8 @@ class SQLSerializer(Serializer):
 
     def term(self, field_name, operator, data):
         model, name = self.model.get_class_from_field_name(field_name)
-        target_type, target_name = model.get_target_from_name(name)
-        target_model, field = model.get_field_from_target_name(target_name)
+        target_type, selector = model.get_target_from_name(name)
+        target_model, field = model.get_field_from_selector(selector)
         db_column = target_model._meta.db_table + '.' + field.column
 
         # Handle case-insensitive queries.
