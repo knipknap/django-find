@@ -7,6 +7,21 @@ class SearchableTest(TestCase):
     def setUp(self):
         self.maxDiff = None
 
+    def testGetAliases(self):
+        expected = ['name', 'rating', 'author']
+        self.assertEqual(expected, Author.get_aliases())
+
+        expected = ['author', 'title', 'comment', 'rating', 'something']
+        self.assertEqual(expected, Book.get_aliases())
+
+    def testGetFullNames(self):
+        expected = ['Author.name', 'Author.rating', 'Author.author']
+        self.assertEqual(expected, Author.get_fullnames())
+
+        expected = ['Book.author', 'Book.title', 'Book.comment',
+                    'Book.rating', 'Book.something']
+        self.assertEqual(expected, Book.get_fullnames())
+
     def testTableHeaders(self):
         expected = ['Name', 'rating']
         self.assertEqual(expected, Author.table_headers())

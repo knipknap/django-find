@@ -71,8 +71,8 @@ class Searchable(object):
         Like get_aliases(), but returns the aliases prefixed by the class
         name.
         """
-        fields = cls.get_aliases()
-        return [cls.__name__+'.'+key for key in fields]
+        aliases = cls.get_aliases()
+        return [cls.__name__+'.'+alias for alias in aliases]
 
     @classmethod
     def table_headers(cls):
