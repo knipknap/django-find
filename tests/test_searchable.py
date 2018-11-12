@@ -14,17 +14,6 @@ class SearchableTest(TestCase):
         expected = ['Name', 'The title', 'comment', 'Stars', 'Author']
         self.assertEqual(expected, Book.table_headers())
 
-    def testSearchCriteria(self):
-        expected = [('Name', 'name'), ('rating', 'rating')]
-        self.assertEqual(expected, Author.search_criteria())
-
-        expected = [('Name', 'author'),
-                    ('The title', 'title'),
-                    ('comment', 'comment'),
-                    ('Stars', 'rating'),
-                    ('Author', 'something')]
-        self.assertEqual(expected, Book.search_criteria())
-
     def testGetFieldFromSelector(self):
         func = SecondAuthor.get_field_from_selector
         self.assertRaises(Exception, func, 'foo')

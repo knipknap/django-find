@@ -87,18 +87,6 @@ class Searchable(object):
         return result
 
     @classmethod
-    def search_criteria(cls):
-        selectors = set()
-        result = []
-        for alias, selector in cls.get_searchable():
-            if selector in selectors:
-                continue
-            selectors.add(selector)
-            caption = cls.get_caption_from_selector(selector)
-            result.append((caption, alias))
-        return result
-
-    @classmethod
     def get_field_from_selector(cls, selector):
         """
         Given a django selector, e.g. device__metadata__name, this returns the class
