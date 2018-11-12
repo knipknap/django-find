@@ -21,12 +21,6 @@ type_map = (
         (models.AutoField, 'INT'),
 )
 
-def field_model2type(field):
-    for field_model, typename in type_map:
-        if isinstance(field, field_model):
-            return typename
-    raise TypeError('fields of type {} unsupported'.format(type(field)))
-
 class Searchable(object):
     """
     This class is a mixin for Django models that provides methods for
@@ -59,21 +53,13 @@ class Searchable(object):
 
     @classmethod
     def get_field_type_from_field(cls, field):
-        if hasattr(cls, 'search_aliases') and field.name in cls.search_aliases:
-            selector = cls.search_aliases[field.name]
-            field = cls.get_field_from_selector(selector)[1]
-        elif field.auto_created and not field.one_to_one:
-            return None
-
-        if field.many_to_one:
-            field = field.target_field
-        elif field.many_to_many:
-            field = field.target_field
-        elif field.is_relation:
-            return None
-            #field = field.get_related_field()
-
-        return field_model2type(field)
+        for field_model, typename in type_map:
+            if isinstance(field, field_model):
+                return typename
+        raise TypeError('field {}.{} is of type {}, which is unsupported'.format(
+            cls.__name__,
+            field.name,
+            type(field)))
 
     @classmethod
     def get_aliases(cls):
