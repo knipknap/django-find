@@ -43,7 +43,7 @@ class Searchable(object):
         return field.name.capitalize()
 
     @classmethod
-    def get_target_type_from_field(cls, field):
+    def get_field_type_from_field(cls, field):
         if hasattr(cls, 'search_aliases') and field.name in cls.search_aliases:
             selector = cls.search_aliases[field.name]
             field = cls.get_field_from_selector(selector)[1]
@@ -114,7 +114,7 @@ class Searchable(object):
         return result
 
     @classmethod
-    def get_field_from_selector(cls, name):
+    def get_field_from_selector(cls, selector):
         """
         Given a django selector, e.g. device__metadata__name, this returns the class
         and the Django field of the model, as returned by Model._meta.get_field().
@@ -122,18 +122,49 @@ class Searchable(object):
 
             device__metadata__name -> (SeedDevice, SeeDevice.name)
         """
-        if not '__' in name:
-            return cls, cls._meta.get_field(name)
+        if not '__' in selector:
+            return cls, cls._meta.get_field(selector)
 
         model = cls
-        while '__' in name:
-            model_name, name = name.split('__', 1)
+        while '__' in selector:
+            model_name, selector = selector.split('__', 1)
             model = model._meta.get_field(model_name).rel.to
 
-        return model, model._meta.get_field(name)
+        return model, model._meta.get_field(selector)
 
     @classmethod
-    def get_target_from_name(cls, name):
+    def get_field_type_from_alias(cls, alias):
+        """
+        Given an alias, e.g. 'host', 'name',
+        this function returns the target type, e.g.::
+
+            'LCSTR'
+
+        @type name: str
+        @param name: e.g. 'address', or 'name'
+        """
+        selector = cls.get_selector_from_fullname(fullname)
+        print("NAME", cls, fullname, selector)
+        thecls, field = cls.get_field_from_selector(selector)
+        return thecls.get_field_type_from_field(field)
+
+    @classmethod
+    def get_field_type_from_fullname(cls, fullname):
+        """
+        Given a fullname, e.g. 'Device.host', 'Author.name',
+        this function returns the target type, e.g.::
+
+            'LCSTR'
+
+        @type name: str
+        @param name: e.g. 'address', or 'name'
+        """
+        selector = cls.get_selector_from_fullname(fullname)
+        thecls, field = cls.get_field_from_selector(selector)
+        return thecls.get_field_type_from_field(field)
+
+    @classmethod
+    def get_target_from_alias(cls, alias):
         """
         Given a field name or alias, e.g. 'host', 'address', 'hostname',
         this function returns the target, e.g.::
@@ -143,22 +174,23 @@ class Searchable(object):
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        selector = cls.get_selector_from_name(name)
+        selector = cls.get_selector_from_alias(alias)
         field = cls.get_field_from_selector(selector)[1]
-        target_type = cls.get_target_type_from_field(field)
-        return target_type, selector
+        field_type = cls.get_field_type_from_field(field)
+        return field_type, selector
 
     @classmethod
-    def get_selector_from_name(cls, name):
+    def get_selector_from_alias(cls, alias):
         """
-        Like get_target_from_name(), but returns the following form::
+        Given alias (not a fullname), this function returns the
+        selector in the following form::
 
             component__device__host
 
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        return dict(cls.get_searchable())[name]
+        return dict(cls.get_searchable())[alias]
 
     @classmethod
     def get_object_vector_to(cls, search_cls):
@@ -216,8 +248,8 @@ class Searchable(object):
         @return: The Django selector
         """
         # Get the target class and attribute by parsing the name.
-        target_cls, name = cls.get_class_from_fullname(fullname)
-        selector = target_cls.get_selector_from_name(name)
+        target_cls, alias = cls.get_class_from_fullname(fullname)
+        selector = target_cls.get_selector_from_alias(alias)
         if target_cls == cls:
             return selector
 

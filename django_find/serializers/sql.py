@@ -30,8 +30,8 @@ class SQLSerializer(Serializer):
         fullnames = self.fullnames if self.fullnames else dom.get_term_names()
         result = []
         for fullname in fullnames:
-            model, name = self.model.get_class_from_fullname(fullname)
-            selector = model.get_selector_from_name(name)
+            model, alias = self.model.get_class_from_fullname(fullname)
+            selector = model.get_selector_from_alias(alias)
             target_model, field = model.get_field_from_selector(selector)
             result.append((target_model, target_model._meta.db_table, field.column))
         return result
@@ -98,13 +98,13 @@ class SQLSerializer(Serializer):
         return 'NOT ' + self.logical_and(terms)
 
     def term(self, term_name, operator, data):
-        model, name = self.model.get_class_from_fullname(term_name)
-        target_type, selector = model.get_target_from_name(name)
+        model, alias = self.model.get_class_from_fullname(term_name)
+        field_type, selector = model.get_target_from_alias(alias)
         target_model, field = model.get_field_from_selector(selector)
         db_column = target_model._meta.db_table + '.' + field.column
 
         # Handle case-insensitive queries.
-        if target_type == 'LCSTR':
+        if field_type == 'LCSTR':
             data = data.lower()
             # This is actually useless, because LIKE is case insensitive
             # normally, but it makes testing easier. Try removing it and

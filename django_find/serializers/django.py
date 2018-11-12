@@ -46,7 +46,7 @@ class DjangoSerializer(Serializer):
             operator = 'exact'
 
         cls, alias = self.model.get_class_from_fullname(name)
-        target_type, target = cls.get_target_from_name(alias)
+        field_type, field = cls.get_target_from_alias(alias)
         selector = self.model.get_selector_from_fullname(name)
 
         type_map = {'BOOL': self.boolean_term,
@@ -54,7 +54,7 @@ class DjangoSerializer(Serializer):
                     'STR': self.str_term,
                     'LCSTR': self.lcstr_term}
 
-        func = type_map.get(target_type)
+        func = type_map.get(field_type)
         if not func:
             raise ValueError('invalid operator: '+repr(operator))
         return func(selector, operator, data)

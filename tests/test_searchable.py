@@ -31,15 +31,15 @@ class SearchableTest(TestCase):
         self.assertEqual(func('book__author__name'),
                          (Author, Author._meta.get_field('name')))
 
-    def testGetTargetFromName(self):
-        func = Author.get_target_from_name
+    def testGetTargetFromAlias(self):
+        func = Author.get_target_from_alias
         self.assertRaises(KeyError, func, 'foo')
         self.assertEqual(func('name'), ('LCSTR', 'name'))
         self.assertEqual(func('author'), ('LCSTR', 'name'))
         self.assertEqual(func('rating'), ('INT', 'rating'))
 
-    def testGetSelectorFromName(self):
-        func = Author.get_selector_from_name
+    def testGetSelectorFromAlias(self):
+        func = Author.get_selector_from_alias
         self.assertRaises(KeyError, func, 'foo')
         self.assertEqual(func('name'), 'name')
         self.assertEqual(func('author'), 'name')
