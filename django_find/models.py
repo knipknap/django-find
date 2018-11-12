@@ -136,9 +136,8 @@ class Searchable(object):
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        selector = cls.get_selector_from_fullname(fullname)
-        thecls, field = cls.get_field_from_selector(selector)
-        return thecls.get_field_type_from_field(field)
+        thecls, alias = cls.get_class_from_fullname(fullname)
+        return thecls.get_field_type_from_alias(alias)
 
     @classmethod
     def get_selector_from_alias(cls, alias):
@@ -174,7 +173,7 @@ class Searchable(object):
             raise AttributeError('class name is required, format should be "Class.alias"')
 
         # Search the class.
-        clsname, name = fullname.split('.', 1)
+        clsname, alias = fullname.split('.', 1)
         thecls = None
         for subclass in get_subclasses(Searchable):
             if subclass.__module__ == '__fake__':
@@ -186,7 +185,7 @@ class Searchable(object):
         if thecls is None:
             raise KeyError('no such class: ', clsname)
 
-        return subclass, name
+        return subclass, alias
 
     @classmethod
     def get_selector_from_fullname(cls, fullname):

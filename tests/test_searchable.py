@@ -47,6 +47,13 @@ class SearchableTest(TestCase):
         self.assertEqual(func('author'), 'LCSTR')
         self.assertEqual(func('rating'), 'INT')
 
+    def testGetFieldTypeFromAlias(self):
+        func = Author.get_field_type_from_fullname
+        self.assertRaises(AttributeError, func, 'foo')
+        self.assertEqual(func('Author.name'), 'LCSTR')
+        self.assertEqual(func('Book.author'), 'LCSTR')
+        self.assertEqual(func('Book.rating'), 'INT')
+
     def testGetSelectorFromAlias(self):
         func = Author.get_selector_from_alias
         self.assertRaises(KeyError, func, 'foo')
