@@ -73,10 +73,7 @@ class Searchable(object):
             return None
             #field = field.get_related_field()
 
-        try:
-            return field_model2type(field)
-        except TypeError:
-            return None  # Unsupported field type
+        return field_model2type(field)
 
     @classmethod
     def get_aliases(cls):

@@ -56,5 +56,5 @@ class DjangoSerializer(Serializer):
 
         func = type_map.get(field_type)
         if not func:
-            return Q() # Unsupported field type
+            raise TypeError('unsupported field type: '+repr(field_type))
         return func(selector, operator, data)
