@@ -12,6 +12,20 @@ from .refs import get_subclasses, get_object_vector_to, get_object_vector_for
 from .rawquery import PaginatedRawQuerySet
 from .model_helpers import sql_from_dom
 
+type_map = (
+        (models.CharField, 'LCSTR'),
+        (models.GenericIPAddressField, 'LCSTR'),
+        (models.BooleanField, 'BOOL'),
+        (models.IntegerField, 'INT'),
+        (models.AutoField, 'INT'),
+)
+
+def field_model2type(field):
+    for field_model, typename in type_map:
+        if isinstance(field, field_model):
+            return typename
+    raise TypeError('fields of type {} unsupported'.format(type(field)))
+
 class Searchable(object):
     """
     This class is a mixin for Django models that provides methods for
@@ -48,32 +62,19 @@ class Searchable(object):
             selector = cls.search_aliases[field.name]
             field = cls.get_field_from_selector(selector)[1]
         elif field.auto_created and not field.one_to_one:
-            #print("REVERSE", field.name, field)
             return None
 
-        #print(field.name, type(field))
         if field.many_to_one:
-            #print("BEFORE", field.name, field, dir(field))
             field = field.target_field
-            #print("AFTER", field.name, field, type(field))
         elif field.many_to_many:
-            #print("BEFORE", field.name, field, dir(field))
             field = field.target_field
-            #print("AFTER", field.name, field, type(field))
         elif field.is_relation:
             return None
             field = field.get_related_field()
 
-        if isinstance(field, (models.CharField, models.GenericIPAddressField)):
-            return 'LCSTR'
-        elif isinstance(field, models.BooleanField):
-            return 'BOOL'
-        elif isinstance(field, models.IntegerField):
-            return 'INT'
-        elif isinstance(field, models.AutoField):
-            return 'INT'
-        else:
-            #raise TypeError('fields of type {} unsupported'.format(type(field)))
+        try:
+            return field_model2type(field)
+        except TypeError:
             return None
 
     @classmethod
