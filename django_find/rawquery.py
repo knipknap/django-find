@@ -18,12 +18,14 @@ class PaginatedRawQuerySet(object):
         """
         Retrieves an item or slice from the set of results.
         """
-        if not isinstance(k, (slice, int,)):
+        if isinstance(k, slice):
+            assert (k.start is None or k.start >= 0) and \
+                   (k.stop is None or k.stop >= 0), \
+                   "Negative indexing is not supported."
+        elif isinstance(k, int):
+            assert k >= 0, "Negative indexing is not supported."
+        else:
             raise TypeError
-        assert ((not isinstance(k, slice) and (k >= 0)) or
-                (isinstance(k, slice) and (k.start is None or k.start >= 0) and
-                 (k.stop is None or k.stop >= 0))), \
-            "Negative indexing is not supported."
 
         if isinstance(k, slice):
             qs = self.__copy__()
