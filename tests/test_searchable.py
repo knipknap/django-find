@@ -46,7 +46,7 @@ class SearchableTest(TestCase):
         self.assertEqual(func('rating'), 'rating')
 
     def testGetClassFromFieldName(self):
-        func = Author.get_class_from_field_name
+        func = Author.get_class_from_fullname
         self.assertRaises(KeyError, func, 'no.foo')
         self.assertRaises(AttributeError, func, 'name')
         self.assertEqual(func('Author.name'), (Author, 'name'))
@@ -56,8 +56,8 @@ class SearchableTest(TestCase):
         self.assertEqual(func('Book.author'), (Book, 'author'))
         self.assertEqual(func('Book.rating'), (Book, 'rating'))
 
-    def testGetSelectorFromFieldName(self):
-        func = DummyModel.get_selector_from_field_name
+    def testGetSelectorFromFullname(self):
+        func = DummyModel.get_selector_from_fullname
         self.assertRaises(AttributeError, func, 'foo')
         self.assertRaises(KeyError, func, 'DummyModel.foo')
         self.assertEqual(func('DummyModel.host'), 'hostname')

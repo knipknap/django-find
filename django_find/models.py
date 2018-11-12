@@ -77,15 +77,16 @@ class Searchable(object):
             return None
 
     @classmethod
-    def get_field_names(cls):
+    def get_aliases(cls):
         return OrderedDict(cls.get_searchable()).keys()
 
     @classmethod
-    def get_full_field_names(cls):
+    def get_fullnames(cls):
         """
-        Like get_field_names(), but returns the names prefixed by the class name.
+        Like get_aliases(), but returns the aliases prefixed by the class
+        name.
         """
-        fields = cls.get_field_names()
+        fields = cls.get_aliases()
         return [cls.__name__+'.'+key for key in fields]
 
     @classmethod
@@ -168,7 +169,7 @@ class Searchable(object):
         return get_object_vector_for(cls, search_cls_list, Searchable)
 
     @classmethod
-    def get_class_from_field_name(cls, name):
+    def get_class_from_fullname(cls, fullname):
         """
         Given a name in the format "Model.hostname", this
         function returns a tuple, where the first element is the Model
@@ -176,12 +177,11 @@ class Searchable(object):
 
         The Model class must inherit from Searchable to be found.
         """
-        if '.' in name:
-            clsname, field_name = name.split('.', 1)
-        else:
+        if '.' not in fullname:
             raise AttributeError('class name is required, format should be "Class.alias"')
 
         # Search the class.
+        clsname, name = fullname.split('.', 1)
         thecls = None
         for subclass in get_subclasses(Searchable):
             if subclass.__module__ == '__fake__':
@@ -193,21 +193,21 @@ class Searchable(object):
         if thecls is None:
             raise KeyError('no such class: ', clsname)
 
-        return subclass, field_name
+        return subclass, name
 
     @classmethod
-    def get_selector_from_field_name(cls, name):
+    def get_selector_from_fullname(cls, fullname):
         """
         Given a name in the form 'Unit.hostname', this function returns
         a Django selector that can be used for filtering.
         Example (assuming the models are Book and Author)::
 
-            Book.get_selector_from_field_name('Author.birthdate')
+            Book.get_selector_from_fullname('Author.birthdate')
             # returns 'author__birthdate'
 
         Example for the models Blog, Entry, Comment::
 
-            Blog.get_selector_from_field_name('Comment.author')
+            Blog.get_selector_from_fullname('Comment.author')
             # returns 'entry__comment__author'
 
         @type name: str
@@ -216,8 +216,8 @@ class Searchable(object):
         @return: The Django selector
         """
         # Get the target class and attribute by parsing the name.
-        target_cls, field_name = cls.get_class_from_field_name(name)
-        selector = target_cls.get_selector_from_name(field_name)
+        target_cls, name = cls.get_class_from_fullname(fullname)
+        selector = target_cls.get_selector_from_name(name)
         if target_cls == cls:
             return selector
 
@@ -233,20 +233,18 @@ class Searchable(object):
         raise Exception('BUG: class %s not in path %s' % (target_cls, path))
 
     @classmethod
-    def get_primary_class_from_field_names(cls, field_names):
-        if not field_names:
+    def get_primary_class_from_fullnames(cls, fullnames):
+        if not fullnames:
             return cls
-        first_field_name = field_names[0]
-        primary_cls, _ = cls.get_class_from_field_name(first_field_name)
-        return primary_cls
+        return cls.get_class_from_fullname(fullnames[0])[0]
 
     @classmethod
-    def by_field_names(cls, field_names):
+    def by_fullnames(cls, fullnames):
         """
         Returns a unfiltered values_list() of all given field names.
         """
-        selectors = [cls.get_selector_from_field_name(f) for f in field_names]
-        primary_cls = cls.get_primary_class_from_field_names(field_names)
+        selectors = [cls.get_selector_from_fullname(f) for f in fullnames]
+        primary_cls = cls.get_primary_class_from_fullnames(fullnames)
         return primary_cls.objects.values_list(*selectors)
 
     @classmethod
@@ -254,7 +252,7 @@ class Searchable(object):
         fields = {}
         for alias, target_name in cls.get_searchable():
             fields[alias] = cls.__name__+'.'+alias
-        default_fields = cls.get_field_names()
+        default_fields = cls.get_aliases()
         query_parser = QueryParser(fields, default_fields)
         return query_parser.parse(query)
 
@@ -272,24 +270,24 @@ class Searchable(object):
         return cls.objects.filter(cls.q_from_query(query))
 
     @classmethod
-    def sql_from_query(cls, query, mode='SELECT', field_names=None, extra_model=None):
+    def sql_from_query(cls, query, mode='SELECT', fullnames=None, extra_model=None):
         """
         Returns an SQL statement for the given query.
         """
         dom = cls.dom_from_query(query)
         return sql_from_dom(cls, dom,
                             mode=mode,
-                            field_names=field_names,
+                            fullnames=fullnames,
                             extra_model=extra_model)
 
     @classmethod
-    def by_query_raw(cls, query, mode='SELECT', field_names=None, extra_model=None):
+    def by_query_raw(cls, query, mode='SELECT', fullnames=None, extra_model=None):
         """
         Returns a PaginatedRawQuerySet for the given query.
         """
         sql, args, fields = cls.sql_from_query(query,
                                                mode=mode,
-                                               field_names=field_names,
+                                               fullnames=fullnames,
                                                extra_model=extra_model)
         return PaginatedRawQuerySet(sql, args), fields
 

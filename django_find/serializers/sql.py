@@ -16,35 +16,35 @@ def _mkcol(tbl, name):
     return tbl+'.'+name+' '+tbl+'_'+name
 
 class SQLSerializer(Serializer):
-    def __init__(self, model, mode='SELECT', field_names=None, extra_model=None):
+    def __init__(self, model, mode='SELECT', fullnames=None, extra_model=None):
         modes = 'SELECT', 'WHERE'
         if mode not in modes:
             raise AttributeError('invalid mode: {}. Must be one of {}'.format(mode, modes))
         Serializer.__init__(self)
         self.model = model
         self.mode = mode
-        self.field_names = field_names
+        self.fullnames = fullnames
         self.extra_model = extra_model
 
     def _create_db_column_list(self, dom):
-        field_names = self.field_names if self.field_names else dom.get_term_names()
+        fullnames = self.fullnames if self.fullnames else dom.get_term_names()
         result = []
-        for field_name in field_names:
-            model, name = self.model.get_class_from_field_name(field_name)
+        for fullname in fullnames:
+            model, name = self.model.get_class_from_fullname(fullname)
             selector = model.get_selector_from_name(name)
             target_model, field = model.get_field_from_selector(selector)
-            result.append((field_name, target_model, target_model._meta.db_table, field.column))
+            result.append((target_model, target_model._meta.db_table, field.column))
         return result
 
     def _create_select(self, fields):
         # Create the "SELECT DISTINCT table1.col1, table2.col2, ..."
         # part of the SQL.
-        select = 'SELECT DISTINCT '+_mkcol(fields[0][2], fields[0][3])
-        for field_name, target_model, table, column in fields[1:]:
+        select = 'SELECT DISTINCT '+_mkcol(fields[0][1], fields[0][2])
+        for target_model, table, column in fields[1:]:
             select += ', '+_mkcol(table, column)
 
         # Find the best way to join the tables.
-        target_models = [r[1] for r in fields]
+        target_models = [r[0] for r in fields]
         if self.extra_model:
             target_models.append(self.extra_model)
         vector = self.model.get_object_vector_for(target_models)
@@ -97,8 +97,8 @@ class SQLSerializer(Serializer):
             return 'NOT(' + terms[0] + ')'
         return 'NOT ' + self.logical_and(terms)
 
-    def term(self, field_name, operator, data):
-        model, name = self.model.get_class_from_field_name(field_name)
+    def term(self, term_name, operator, data):
+        model, name = self.model.get_class_from_fullname(term_name)
         target_type, selector = model.get_target_from_name(name)
         target_model, field = model.get_field_from_selector(selector)
         db_column = target_model._meta.db_table + '.' + field.column

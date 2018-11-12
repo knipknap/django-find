@@ -45,9 +45,9 @@ class DjangoSerializer(Serializer):
         if operator == 'equals':
             operator = 'exact'
 
-        cls, field_name = self.model.get_class_from_field_name(name)
-        target_type, target = cls.get_target_from_name(field_name)
-        selector = self.model.get_selector_from_field_name(name)
+        cls, alias = self.model.get_class_from_fullname(name)
+        target_type, target = cls.get_target_from_name(alias)
+        selector = self.model.get_selector_from_fullname(name)
 
         type_map = {'BOOL': self.boolean_term,
                     'INT': self.int_term,
