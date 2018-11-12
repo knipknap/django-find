@@ -9,8 +9,7 @@ operator_map = {
     'startswith': " LIKE '{}%%'",
     'endswith': " LIKE '%%{}'",
     'contains': " LIKE '%%{}%%'",
-    'regex': " REGEXP '%%{}%%'",
-    'any': '1'}
+    'regex': " REGEXP '%%{}%%'"}
 
 def _mkcol(tbl, name):
     return tbl+'.'+name+' '+tbl+'_'+name
@@ -98,6 +97,9 @@ class SQLSerializer(Serializer):
         return 'NOT ' + self.logical_and(terms)
 
     def term(self, term_name, operator, data):
+        if operator == 'any':
+            return '1'
+
         model, alias = self.model.get_class_from_fullname(term_name)
         selector = model.get_selector_from_alias(alias)
         target_model, field = model.get_field_from_selector(selector)

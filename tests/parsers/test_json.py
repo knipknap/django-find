@@ -23,6 +23,16 @@ query2 = '''
 expected2 = """Group(root)
   Term: Chapter.title contains 'foo'"""
 
+query3 = '''
+{
+    "Book": {"title":[[["contains","foo"]]]},
+    "Chapter": {"title":[[]]}
+}
+'''
+expected3 = """Group(root)
+  Term: Book.title contains 'foo'
+  Term: Chapter.title any ''"""
+
 class JSONParserTest(TestCase):
     def setUp(self):
         self.maxDiff = None
