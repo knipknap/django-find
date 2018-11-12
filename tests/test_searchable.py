@@ -31,12 +31,12 @@ class SearchableTest(TestCase):
         self.assertEqual(func('book__author__name'),
                          (Author, Author._meta.get_field('name')))
 
-    def testGetTargetFromAlias(self):
-        func = Author.get_target_from_alias
+    def testGetFieldTypeFromAlias(self):
+        func = Author.get_field_type_from_alias
         self.assertRaises(KeyError, func, 'foo')
-        self.assertEqual(func('name'), ('LCSTR', 'name'))
-        self.assertEqual(func('author'), ('LCSTR', 'name'))
-        self.assertEqual(func('rating'), ('INT', 'rating'))
+        self.assertEqual(func('name'), 'LCSTR')
+        self.assertEqual(func('author'), 'LCSTR')
+        self.assertEqual(func('rating'), 'INT')
 
     def testGetSelectorFromAlias(self):
         func = Author.get_selector_from_alias
@@ -85,7 +85,9 @@ class SearchableTest(TestCase):
         self.assertTrue('WHERE ' in query.raw_query)
         self.assertTrue('%testme%' in query.raw_query)
         self.failIf('SimpleModel' in query.raw_query)
-        self.assertEqual(['SimpleModel.title', 'SimpleModel.comment'], fields)
+        self.assertEqual(['SimpleModel.title',
+                          'SimpleModel.comment',
+                          'SimpleModel.yesno'], fields)
 
         query, fields = Author.by_query_raw('testme AND name:foo')
         self.assertTrue('WHERE ' in query.raw_query)

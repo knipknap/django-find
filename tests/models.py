@@ -69,6 +69,7 @@ class SecondAuthor(models.Model, Searchable):
 class SimpleModel(models.Model, Searchable):
     title = models.CharField(max_length=10)
     comment = models.CharField(max_length=10)
+    yesno = models.BooleanField("Choose yes or no")
 
     class Meta:
         app_label = 'search_tests'

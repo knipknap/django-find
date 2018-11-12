@@ -99,11 +99,12 @@ class SQLSerializer(Serializer):
 
     def term(self, term_name, operator, data):
         model, alias = self.model.get_class_from_fullname(term_name)
-        field_type, selector = model.get_target_from_alias(alias)
+        selector = model.get_selector_from_alias(alias)
         target_model, field = model.get_field_from_selector(selector)
         db_column = target_model._meta.db_table + '.' + field.column
 
         # Handle case-insensitive queries.
+        field_type = model.get_field_type_from_alias(alias)
         if field_type == 'LCSTR':
             data = data.lower()
             # This is actually useless, because LIKE is case insensitive

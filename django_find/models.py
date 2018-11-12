@@ -143,10 +143,9 @@ class Searchable(object):
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        selector = cls.get_selector_from_fullname(fullname)
-        print("NAME", cls, fullname, selector)
-        thecls, field = cls.get_field_from_selector(selector)
-        return thecls.get_field_type_from_field(field)
+        selector = cls.get_selector_from_alias(alias)
+        field = cls.get_field_from_selector(selector)[1]
+        return cls.get_field_type_from_field(field)
 
     @classmethod
     def get_field_type_from_fullname(cls, fullname):
@@ -162,22 +161,6 @@ class Searchable(object):
         selector = cls.get_selector_from_fullname(fullname)
         thecls, field = cls.get_field_from_selector(selector)
         return thecls.get_field_type_from_field(field)
-
-    @classmethod
-    def get_target_from_alias(cls, alias):
-        """
-        Given a field name or alias, e.g. 'host', 'address', 'hostname',
-        this function returns the target, e.g.::
-
-            LCSTR:component__device__host
-
-        @type name: str
-        @param name: e.g. 'address', or 'name'
-        """
-        selector = cls.get_selector_from_alias(alias)
-        field = cls.get_field_from_selector(selector)[1]
-        field_type = cls.get_field_type_from_field(field)
-        return field_type, selector
 
     @classmethod
     def get_selector_from_alias(cls, alias):
@@ -282,10 +265,10 @@ class Searchable(object):
     @classmethod
     def dom_from_query(cls, query):
         fields = {}
-        for alias, target_name in cls.get_searchable():
+        aliases = cls.get_aliases()
+        for alias in aliases:
             fields[alias] = cls.__name__+'.'+alias
-        default_fields = cls.get_aliases()
-        query_parser = QueryParser(fields, default_fields)
+        query_parser = QueryParser(fields, aliases)
         return query_parser.parse(query)
 
     @classmethod

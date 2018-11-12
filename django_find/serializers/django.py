@@ -46,7 +46,7 @@ class DjangoSerializer(Serializer):
             operator = 'exact'
 
         cls, alias = self.model.get_class_from_fullname(name)
-        field_type, field = cls.get_target_from_alias(alias)
+        field_type = cls.get_field_type_from_alias(alias)
         selector = self.model.get_selector_from_fullname(name)
 
         type_map = {'BOOL': self.boolean_term,
