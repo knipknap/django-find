@@ -27,7 +27,8 @@ class Searchable(object):
     searching the model using query strings and other tools.
     """
 
-    searchable_labels = {}
+    searchable_labels = {} # Override the verbose_name for the given aliases
+    searchable = () # Contains two-tuples, mapping aliases to Django selectors
 
     @classmethod
     def get_default_searchable(cls):
@@ -63,7 +64,11 @@ class Searchable(object):
 
     @classmethod
     def get_aliases(cls):
-        return OrderedDict(cls.get_searchable()).keys()
+        """
+        Returns a list of the aliases, that is, the names of the
+        fields that can be used in a query.
+        """
+        return list(OrderedDict(cls.get_searchable()).keys())
 
     @classmethod
     def get_fullnames(cls):
