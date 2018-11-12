@@ -14,6 +14,7 @@ from .model_helpers import sql_from_dom
 
 type_map = (
         (models.CharField, 'LCSTR'),
+        (models.TextField, 'LCSTR'),
         (models.GenericIPAddressField, 'LCSTR'),
         (models.BooleanField, 'BOOL'),
         (models.IntegerField, 'INT'),
@@ -70,12 +71,12 @@ class Searchable(object):
             field = field.target_field
         elif field.is_relation:
             return None
-            field = field.get_related_field()
+            #field = field.get_related_field()
 
         try:
             return field_model2type(field)
         except TypeError:
-            return None
+            return None  # Unsupported field type
 
     @classmethod
     def get_aliases(cls):
