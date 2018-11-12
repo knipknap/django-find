@@ -31,6 +31,11 @@ class SearchableTest(TestCase):
         self.assertEqual(func('book__author__name'),
                          (Author, Author._meta.get_field('name')))
 
+    def testGetCaptionFromSelector(self):
+        func = SecondAuthor.get_caption_from_selector
+        self.assertRaises(Exception, func, 'foo')
+        self.assertEqual(func('book__author__name'), 'Name')
+
     def testGetFieldTypeFromAlias(self):
         func = Author.get_field_type_from_alias
         self.assertRaises(KeyError, func, 'foo')
