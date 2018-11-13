@@ -22,6 +22,13 @@ class PaginatedRawQuerySetTest(TestCase):
         self.assertRaises(IndexError, self.query.__getitem__, slice(-1, 0))
         self.assertRaises(IndexError, self.query.__getitem__, slice(0, -1))
         self.assertRaises(IndexError, self.query.__getitem__, slice(None, -1))
+        self.assertRaises(TypeError, self.query.__getitem__, 'a')
+
+        # Test the result cache.
+        self.assertEqual(self.query[0], ('Foo0', 10))
+        self.assertEqual(self.query[0], ('Foo0', 10))
+        self.assertEqual(list(self.query[0:2]), [('Foo0', 10), ('Foo1', 10)])
+        self.assertEqual(list(self.query[0:2]), [('Foo0', 10), ('Foo1', 10)])
 
     def testQuery(self):
         expected = "SELECT name, rating FROM search_tests_author ORDER BY name"
@@ -35,6 +42,7 @@ class PaginatedRawQuerySetTest(TestCase):
 
     def testLen(self):
         self.assertEqual(len(self.query), 10)
+        self.assertEqual(len(self.query), 10) # Cached
         self.assertEqual(len(self.query[2:8]), 6)
         self.assertEqual(len(self.query[:8]), 8)
         self.assertEqual(len(self.query[:]), 10)

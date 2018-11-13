@@ -7,7 +7,7 @@ class PaginatedRawQuerySet(object):
         self.raw_query = raw_query
         self.args = args if args else []
         self.limit = limit
-        self.offset = offset
+        self.offset = offset or 0
         self.result_cache = None
         self.count_cache = None
 
@@ -44,12 +44,10 @@ class PaginatedRawQuerySet(object):
     @property
     def query(self):
         query = self.raw_query
-        if self.limit is not None and self.offset is not None:
-            query += ' LIMIT '+str(int(self.limit))+' OFFSET '+str(int(self.offset))
-        elif self.limit is not None:
-            query += ' LIMIT '+str(int(self.limit))
-        elif self.offset is not None:
+        if self.limit is None:
             query += ' LIMIT '+str(SQL_MAXINT-self.offset)+' OFFSET '+str(int(self.offset))
+        else:
+            query += ' LIMIT '+str(int(self.limit))+' OFFSET '+str(int(self.offset))
         return query
 
     def __iter__(self):
