@@ -1,5 +1,7 @@
 from django.db import connection
 
+SQL_MAXINT=9223372036854775807 # SQLite maxint
+
 class PaginatedRawQuerySet(object):
     def __init__(self, raw_query, args=None, limit=None, offset=None):
         self.raw_query = raw_query
@@ -19,18 +21,19 @@ class PaginatedRawQuerySet(object):
         Retrieves an item or slice from the set of results.
         """
         if isinstance(k, slice):
-            assert (k.start is None or k.start >= 0) and \
-                   (k.stop is None or k.stop >= 0), \
-                   "Negative indexing is not supported."
+            if (k.start is not None and k.start < 0) or \
+               (k.stop is not None and k.stop < 0):
+               raise IndexError("Negative indexing is not supported")
         elif isinstance(k, int):
-            assert k >= 0, "Negative indexing is not supported."
+            if k < 0:
+                raise IndexError("Negative indexing is not supported")
         else:
             raise TypeError
 
         if isinstance(k, slice):
             qs = self.__copy__()
             qs.offset = k.start or 0
-            qs.limit = k.stop-k.start or None
+            qs.limit = (k.stop-qs.offset) if k.stop is not None else None
             return qs
 
         qs = self.__copy__()
@@ -41,10 +44,12 @@ class PaginatedRawQuerySet(object):
     @property
     def query(self):
         query = self.raw_query
-        if self.limit is not None:
+        if self.limit is not None and self.offset is not None:
+            query += ' LIMIT '+str(int(self.limit))+' OFFSET '+str(int(self.offset))
+        elif self.limit is not None:
             query += ' LIMIT '+str(int(self.limit))
-        if self.offset is not None:
-            query += ' OFFSET '+str(int(self.offset))
+        elif self.offset is not None:
+            query += ' LIMIT '+str(SQL_MAXINT-self.offset)+' OFFSET '+str(int(self.offset))
         return query
 
     def __iter__(self):
