@@ -76,21 +76,6 @@ class Term(Node):
     def optimize(self):
         return self
 
-    @classmethod
-    def from_query_value(cls, name, value):
-        if value.startswith('^') and value.endswith('$'):
-            value = value[1:-1]
-            operator = 'equals'
-        elif value.startswith('^'):
-            value = value[1:]
-            operator = 'startswith'
-        elif value.endswith('$'):
-            value = value[:-1]
-            operator = 'endswith'
-        else:
-            operator = 'contains'
-        return Term(name, operator, value)
-
     def each(self, func, node_type):
         if node_type is None or isinstance(self, node_type):
             func(self)

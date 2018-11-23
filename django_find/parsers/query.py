@@ -21,6 +21,15 @@ def close_scope(scopes):
     while scopes[-1].auto_leave_scope() and not scopes[-1].is_root:
         scopes.pop()
 
+def op_from_word(word):
+    if word.startswith('^') and word.endswith('$'):
+        return word[1:-1], 'equals'
+    elif word.startswith('^'):
+        return word[1:], 'startswith'
+    elif word.endswith('$'):
+        return word[:-1], 'endswith'
+    return word, 'contains'
+
 class QueryParser(Parser):
     def __init__(self, fields, default):
         """
@@ -39,7 +48,8 @@ class QueryParser(Parser):
         child = Or()
         for name in self.default:
             name = self.fields[name]
-            child.add(Term.from_query_value(name, match.group(1)))
+            value, operator = op_from_word(match.group(1))
+            child.add(Term(name, operator, value))
         scopes[-1].add(child)
         close_scope(scopes)
 
@@ -53,10 +63,11 @@ class QueryParser(Parser):
         # A field value is required.
         token, match = self._get_next_token()
         try:
-            value = [match.group(1)]
+            value = match.group(1)
         except IndexError:
             return
-        scopes[-1].add(Term.from_query_value(field, " ".join(value)))
+        value, operator = op_from_word(value)
+        scopes[-1].add(Term(field, operator, value))
         close_scope(scopes)
 
     def parse_boolean(self, scopes, dom_cls, match):
