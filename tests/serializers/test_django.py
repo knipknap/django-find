@@ -12,7 +12,7 @@ expected_query1 = """(AND: ('name__iexact', 'test'), (NOT (AND: ('book__title__i
 expected_query2 = """(AND: ('book__chapter__title__icontains', 'foo'))"""
 
 query3 = 'test and updated:"2018-02-01" or updated:^2018-02-02$ added:"^2018-01-01" added:2018-01-02$'
-expected_query3 = """(AND: (OR: (AND: (OR: ('hostname__icontains', 'test'), ('address__icontains', 'test'), ('model__icontains', 'test'), (AND: ), (AND: ), ('hostname__icontains', 'test')), ('updated__year', 2018), ('updated__day', 1), ('updated__month', 2)), (AND: ('updated__year', 2018), ('updated__day', 2), ('updated__month', 2)), ('added__gte', datetime.date(2018, 1, 1)), ('added__lte', datetime.date(2018, 1, 2))))"""
+expected_query3 = """(AND: (OR: (AND: (OR: ('hostname__icontains', 'test'), ('address__icontains', 'test'), ('model__icontains', 'test'), ('hostname__icontains', 'test')), ('updated__year', 2018), ('updated__day', 1), ('updated__month', 2)), (AND: ('updated__year', 2018), ('updated__day', 2), ('updated__month', 2), ('updated__hour', 0), ('updated__minute', 0)), ('added__gte', datetime.date(2018, 1, 1)), ('added__lte', datetime.date(2018, 1, 2))))"""
 
 def to_list_recursive(tpl):
     if not isinstance(tpl, tuple):

@@ -115,7 +115,7 @@ class SQLSerializer(Serializer):
 
     def datetime_term(self, db_column, operator, data):
         thedatetime = parse_datetime(data)
-        return self.date_datetime_common(db_column, operator, thedate)
+        return self.date_datetime_common(db_column, operator, thedatetime)
 
     def other_term(self, db_column, operator, data):
         # Generate the LIKE or "=" statement.

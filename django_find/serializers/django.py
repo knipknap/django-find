@@ -10,9 +10,11 @@ class DjangoSerializer(Serializer):
         self.model = model
 
     def logical_and(self, terms):
+        terms = [t for t in terms if t]
         return reduce(lambda x, y: x.__and__(y), terms, Q())
 
     def logical_or(self, terms):
+        terms = [t for t in terms if t]
         if not terms:
             return Q()
         return reduce(lambda x, y: x.__or__(y), terms)
@@ -35,10 +37,14 @@ class DjangoSerializer(Serializer):
             return Q(**{selector: value})
 
     def str_term(self, selector, operator, data):
+        if operator == 'equals':
+            operator = 'exact'
+        elif operator == 'iequals':
+            operator = 'iexact'
         return Q(**{selector+'__'+operator: data})
 
     def lcstr_term(self, selector, operator, data):
-        return Q(**{selector+'__i'+operator: data})
+        return self.str_term(selector, 'i'+operator, data)
 
     def date_datetime_common(self, selector, operator, thedatetime):
         if not thedatetime:
@@ -47,8 +53,6 @@ class DjangoSerializer(Serializer):
             return Q(**{selector+'__gte': thedatetime})
         elif operator == 'endswith':
             return Q(**{selector+'__lte': thedatetime})
-        elif operator == 'equals':
-            return Q(**{selector: thedatetime})
         return Q(**{selector+'__year': thedatetime.year,
                     selector+'__month': thedatetime.month,
                     selector+'__day': thedatetime.day})
@@ -60,7 +64,7 @@ class DjangoSerializer(Serializer):
     def datetime_term(self, selector, operator, data):
         thedatetime = parse_datetime(data)
         result = self.date_datetime_common(selector, operator, thedatetime)
-        if operator != 'contains':
+        if operator != 'equals' or not result:
             return result
         return result&Q(**{selector+'__hour': thedatetime.hour,
                            selector+'__minute': thedatetime.minute})
@@ -68,8 +72,6 @@ class DjangoSerializer(Serializer):
     def term(self, name, operator, data):
         if operator == 'any':
             return Q()
-        if operator == 'equals':
-            operator = 'exact'
 
         cls, alias = self.model.get_class_from_fullname(name)
         field_type = cls.get_field_type_from_alias(alias)
