@@ -56,6 +56,8 @@ class Searchable(object):
 
     @classmethod
     def get_field_type_from_field(cls, field):
+        if isinstance(field, models.ForeignKey):
+            field = field.target_field
         for field_model, typename in type_map:
             if isinstance(field, field_model):
                 return typename
