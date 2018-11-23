@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 from functools import reduce
 from django.db.models import Q
 from .serializer import Serializer
+from .util import parse_date, parse_datetime
 
 class DjangoSerializer(Serializer):
     def __init__(self, model):
@@ -39,6 +40,31 @@ class DjangoSerializer(Serializer):
     def lcstr_term(self, selector, operator, data):
         return Q(**{selector+'__i'+operator: data})
 
+    def date_datetime_common(self, selector, operator, thedatetime):
+        if not thedatetime:
+            return Q()
+        if operator == 'startswith':
+            return Q(**{selector+'__gte': thedatetime})
+        elif operator == 'endswith':
+            return Q(**{selector+'__lte': thedatetime})
+        elif operator == 'equals':
+            return Q(**{selector: thedatetime})
+        return Q(**{selector+'__year': thedatetime.year,
+                    selector+'__month': thedatetime.month,
+                    selector+'__day': thedatetime.day})
+
+    def date_term(self, selector, operator, data):
+        thedate = parse_date(data)
+        return self.date_datetime_common(selector, operator, thedate)
+
+    def datetime_term(self, selector, operator, data):
+        thedatetime = parse_datetime(data)
+        result = self.date_datetime_common(selector, operator, thedatetime)
+        if operator != 'contains':
+            return result
+        return result&Q(**{selector+'__hour': thedatetime.hour,
+                           selector+'__minute': thedatetime.minute})
+
     def term(self, name, operator, data):
         if operator == 'any':
             return Q()
@@ -52,7 +78,9 @@ class DjangoSerializer(Serializer):
         type_map = {'BOOL': self.boolean_term,
                     'INT': self.int_term,
                     'STR': self.str_term,
-                    'LCSTR': self.lcstr_term}
+                    'LCSTR': self.lcstr_term,
+                    'DATE': self.date_term,
+                    'DATETIME': self.datetime_term}
 
         func = type_map.get(field_type)
         if not func:

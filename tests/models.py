@@ -5,6 +5,8 @@ class DummyModel(models.Model, Searchable):
     hostname = models.CharField(max_length=10)
     address = models.CharField(max_length=10)
     model = models.CharField(max_length=10)
+    added = models.DateTimeField(auto_now_add=True, blank=True)
+    updated = models.DateTimeField(auto_now=True, blank=True)
 
     searchable = [
         ('host', 'hostname'),

@@ -19,6 +19,8 @@ type_map = (
         (models.BooleanField, 'BOOL'),
         (models.IntegerField, 'INT'),
         (models.AutoField, 'INT'),
+        (models.DateField, 'DATE'),
+        (models.DateTimeField, 'DATETIME'),
 )
 
 class Searchable(object):

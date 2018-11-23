@@ -3,6 +3,7 @@ from builtins import str
 from MySQLdb import escape_string
 from ..refs import get_join_for
 from .serializer import Serializer
+from .util import parse_date, parse_datetime
 
 operator_map = {
     'equals': "='{}'",
@@ -75,16 +76,19 @@ class SQLSerializer(Serializer):
         return select, []
 
     def logical_group(self, terms):
+        terms = [t for t in terms if t]
         if not terms:
             return ''
         return ' AND '.join(terms)
 
     def logical_and(self, terms):
+        terms = [t for t in terms if t]
         if not terms:
             return '()'
         return '(' + self.logical_group(terms) + ')'
 
     def logical_or(self, terms):
+        terms = [t for t in terms if t]
         if not terms:
             return ''
         return '(' + ' OR '.join(terms) + ')'
@@ -96,23 +100,24 @@ class SQLSerializer(Serializer):
             return 'NOT(' + terms[0] + ')'
         return 'NOT ' + self.logical_and(terms)
 
-    def term(self, term_name, operator, data):
-        if operator == 'any':
-            return '1'
+    def date_datetime_common(self, db_column, operator, thedatetime):
+        if not thedatetime:
+            return ''
+        if operator == 'startswith':
+            return db_column+'>='+thedatetime.isoformat()
+        elif operator == 'endswith':
+            return db_column+'<='+thedatetime.isoformat()
+        return db_column+'='+thedatetime.isoformat()
 
-        model, alias = self.model.get_class_from_fullname(term_name)
-        selector = model.get_selector_from_alias(alias)
-        target_model, field = model.get_field_from_selector(selector)
-        db_column = target_model._meta.db_table + '.' + field.column
+    def date_term(self, db_column, operator, data):
+        thedate = parse_date(data)
+        return self.date_datetime_common(db_column, operator, thedate)
 
-        # Handle case-insensitive queries.
-        field_type = model.get_field_type_from_alias(alias)
-        if field_type == 'LCSTR':
-            data = data.lower()
-            # This is actually useless, because LIKE is case insensitive
-            # normally, but it makes testing easier. Try removing it and
-            # run the tests to see why.
+    def datetime_term(self, db_column, operator, data):
+        thedatetime = parse_datetime(data)
+        return self.date_datetime_common(db_column, operator, thedate)
 
+    def other_term(self, db_column, operator, data):
         # Generate the LIKE or "=" statement.
         op = operator_map.get(operator)
         if not op:
@@ -124,3 +129,26 @@ class SQLSerializer(Serializer):
         # (Also, I didn't find any API from Django to generate a prepared statement
         # without already executing it, e.g. django.db.connection.execute())
         return db_column+op.format(escape_string(data).decode('utf-8'))
+
+    def term(self, term_name, operator, data):
+        if operator == 'any':
+            return '1'
+
+        model, alias = self.model.get_class_from_fullname(term_name)
+        selector = model.get_selector_from_alias(alias)
+        target_model, field = model.get_field_from_selector(selector)
+        db_column = target_model._meta.db_table + '.' + field.column
+        data = escape_string(data).decode('utf-8')
+
+        # Handle case-insensitive queries.
+        field_type = model.get_field_type_from_alias(alias)
+        if field_type == 'LCSTR':
+            data = data.lower()
+            # This is actually useless, because LIKE is case insensitive
+            # normally, but it makes testing easier. Try removing it and
+            # run the tests to see why.
+        elif field_type == 'DATE':
+            return self.date_term(db_column, operator, data)
+        elif field_type == 'DATETIME':
+            return self.datetime_term(db_column, operator, data)
+        return self.other_term(db_column, operator, data)
