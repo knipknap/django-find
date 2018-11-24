@@ -35,7 +35,7 @@ following string returns all models that have a field containing
 Search individual fields
 ------------------------
 
-To limit your search to a specific field of a model, you can
+To limit your search to a specific field of, you can
 use the following syntax::
 
 	author:robert
@@ -56,7 +56,7 @@ To search a string at the end of a field, use::
 	test$
 	author:frost$
 
-To look for an exact match, use eith both, ``^`` and ``$``, or
+To look for an exact match, use either both, ``^`` and ``$``, or
 use an equal sign (``=``) instead. The following queries all look
 for an exact match::
 
