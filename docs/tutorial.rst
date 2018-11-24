@@ -12,15 +12,12 @@ Motivation
 
 Assume you want to add a search box to your user interface, where
 your users can search your models using a simple query language.
-django-find supports the following queries:
+For example:
 
 - ``hello world`` (searches all fields for hello and world)
-- ``author:robert OR title:road`` (searches the field "author" for "robert", and "title" for "road")
-- ``author:"robert frost" and (title:road or chapter:2)`` (the AND is optional, it is implied by default)
-- ``^robert`` (find anything that starts with "robert")
-- ``robert$`` (find anything that ends with "robert")
-- ``^robert$ and not title:road`` (find anything that equals "robert" and not the title "road")
-- ``test (name:foo and (book:one or book:two) and (chapter:10 or chapter:12 or chapter:13))`` (arbitrary nesting is supported)
+- ``robert OR title:road`` (searches all fields for "robert", and "title" for "road")
+
+The documentation of the query language is :doc:`here <query>`.
 
 Alternatively, you may want to allow the user to specify the
 models and columns to display with a UI like this:

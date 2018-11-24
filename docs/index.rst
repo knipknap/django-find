@@ -69,6 +69,7 @@ Contents
 
    install
    tutorial
+   query
    API Documentation<modules>
 
 Development
