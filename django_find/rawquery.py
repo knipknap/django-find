@@ -21,25 +21,29 @@ class PaginatedRawQuerySet(object):
                               limit=self.limit,
                               offset=self.offset)
 
+    def _getslice(self, slc):
+        assert_positive_slice(slc)
+        qs = self.__copy__()
+        qs.offset = slc.start or 0
+        qs.limit = None if slc.stop is None else (slc.stop-qs.offset)
+        return qs
+
+    def _getindex(self, idx):
+        if idx < 0:
+            raise IndexError("Negative indexing is not supported")
+        qs = self.__copy__()
+        qs.offset = self.offset+idx if self.offset else idx
+        qs.limit = 1
+        return list(qs)[idx]
+
     def __getitem__(self, k):
         """
         Retrieves an item or slice from the set of results.
         """
         if isinstance(k, slice):
-            assert_positive_slice(k)
-            qs = self.__copy__()
-            qs.offset = k.start or 0
-            qs.limit = (k.stop-qs.offset) if k.stop is not None else None
-            return qs
-
+            return self._getslice(k)
         if isinstance(k, int):
-            if k < 0:
-                raise IndexError("Negative indexing is not supported")
-            qs = self.__copy__()
-            qs.offset = self.offset+k if self.offset else k
-            qs.limit = 1
-            return list(qs)[k]
-
+            return self._getindex(k)
         raise TypeError
 
     @property
