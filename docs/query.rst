@@ -35,7 +35,7 @@ following string returns all models that have a field containing
 Search individual fields
 ------------------------
 
-To limit your search to a specific field of, you can
+To limit your search to a specific field, you can
 use the following syntax::
 
 	author:robert
@@ -46,7 +46,7 @@ Limiting a search to the beginning or end of a string
 -----------------------------------------------------
 
 To search a string in a particular location of a field, use the
-``^`` and ``$`` operators. The search at the beginning, use::
+``^`` and ``$`` operators. To search at the beginning, use::
 
 	^test
 	author:^robert
