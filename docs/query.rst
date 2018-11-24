@@ -32,6 +32,16 @@ following string returns all models that have a field containing
 
 	"foo bar"
 
+Search individual fields
+------------------------
+
+To limit your search to a specific field of a model, you can
+use the following syntax::
+
+	author:robert
+	author:"robert frost"
+	author:robert author:frost title:road
+
 Limiting a search to the beginning or end of a string
 -----------------------------------------------------
 
@@ -55,16 +65,6 @@ for an exact match::
 	author=frost
 	author:"^robert frost$"
 	author="robert frost"
-
-Search individual model fields
-------------------------------
-
-To limit your search to a specific field of a model, you can
-use the following syntax::
-
-	author:robert
-	author:"robert frost"
-	author:robert author:frost title:road
 
 Boolean operators
 -----------------
