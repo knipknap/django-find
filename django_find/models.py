@@ -244,26 +244,27 @@ class Searchable(object):
         return primary_cls.objects.values_list(*selectors)
 
     @classmethod
-    def dom_from_query(cls, query):
+    def dom_from_query(cls, query, aliases=None):
+        if not aliases:
+            aliases = cls.get_aliases()
         fields = {}
-        aliases = cls.get_aliases()
         for alias in aliases:
             fields[alias] = cls.__name__+'.'+alias
         query_parser = QueryParser(fields, aliases)
         return query_parser.parse(query)
 
     @classmethod
-    def q_from_query(cls, query):
+    def q_from_query(cls, query, aliases=None):
         """
         Returns a Q-Object for the given query.
         """
-        dom = cls.dom_from_query(query)
+        dom = cls.dom_from_query(query, aliases)
         serializer = DjangoSerializer(cls)
         return dom.serialize(serializer)
 
     @classmethod
-    def by_query(cls, query):
-        return cls.objects.filter(cls.q_from_query(query))
+    def by_query(cls, query, aliases=None):
+        return cls.objects.filter(cls.q_from_query(query, aliases))
 
     @classmethod
     def sql_from_query(cls, query, mode='SELECT', fullnames=None, extra_model=None):
