@@ -2,6 +2,11 @@ from django.db import connection
 
 SQL_MAXINT=9223372036854775807 # SQLite maxint
 
+def assert_positive_slice(slc):
+    if (slc.start is not None and slc.start < 0) or \
+       (slc.stop is not None and slc.stop < 0):
+       raise IndexError("Negative indexing is not supported")
+
 class PaginatedRawQuerySet(object):
     def __init__(self, raw_query, args=None, limit=None, offset=None):
         self.raw_query = raw_query
@@ -21,25 +26,21 @@ class PaginatedRawQuerySet(object):
         Retrieves an item or slice from the set of results.
         """
         if isinstance(k, slice):
-            if (k.start is not None and k.start < 0) or \
-               (k.stop is not None and k.stop < 0):
-               raise IndexError("Negative indexing is not supported")
-        elif isinstance(k, int):
-            if k < 0:
-                raise IndexError("Negative indexing is not supported")
-        else:
-            raise TypeError
-
-        if isinstance(k, slice):
+            assert_positive_slice(k)
             qs = self.__copy__()
             qs.offset = k.start or 0
             qs.limit = (k.stop-qs.offset) if k.stop is not None else None
             return qs
 
-        qs = self.__copy__()
-        qs.offset = self.offset+k if self.offset else k
-        qs.limit = 1
-        return list(qs)[k]
+        if isinstance(k, int):
+            if k < 0:
+                raise IndexError("Negative indexing is not supported")
+            qs = self.__copy__()
+            qs.offset = self.offset+k if self.offset else k
+            qs.limit = 1
+            return list(qs)[k]
+
+        raise TypeError
 
     @property
     def query(self):
