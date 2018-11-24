@@ -18,7 +18,7 @@ class SearchNode(template.Node):
             query = getvars['q']
             queryset = self.queryset_var.resolve(context)
             q_obj = queryset.model.q_from_query(query, self.fields)
-            context['result_set'] = queryset.filter(q_obj)
+            context[self.queryset_var.var] = queryset.filter(q_obj)
 
         return render_to_string('django_find/form.html',
                                 {'getvars': getvars})
