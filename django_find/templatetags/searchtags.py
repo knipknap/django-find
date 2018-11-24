@@ -4,8 +4,8 @@ from django.template.loader import render_to_string
 from ..search import raw_search
 
 class SearchNode(template.Node):
-    def __init__(self, model_var, fields):
-        self.model_var = template.Variable(model_var)
+    def __init__(self, queryset_var, fields):
+        self.queryset_var = template.Variable(queryset_var)
         self.fields = fields
 
     def render(self, context):
@@ -16,10 +16,9 @@ class SearchNode(template.Node):
             # Search, and store the resulting queryset in the current
             # context.
             query = getvars['q']
-            model_name = self.model_var.var
-            model = self.model_var.resolve(context)
-            queryset = model.by_query(query, self.fields)
-            context['result_set'] = queryset
+            queryset = self.queryset_var.resolve(context)
+            q_obj = queryset.model.q_from_query(query, self.fields)
+            context['result_set'] = queryset.filter(q_obj)
 
         return render_to_string('django_find/form.html',
                                 {'getvars': getvars})
@@ -29,7 +28,7 @@ def do_search(parser, token):
     if len(contents) < 2:
         raise template.TemplateSyntaxError(
             "%r tag requires at least 1 argument, " +
-            "in the form of {%% %r model [alias1 alias2 ...] %%}" % contents[0])
+            "in the form of {%% %r model.objects.all [alias1 alias2 ...] %%}" % contents[0])
 
     return SearchNode(contents[1], contents[2:])
 
