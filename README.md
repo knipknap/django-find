@@ -8,12 +8,13 @@
 ## Summary
 
 **django-find** is a Django app that makes it easy to add complex
-search functionality for the models in your project.
+search/filter functionality for the models in your project.
 It supports two different ways to search your Django models:
 Query-based, or JSON-based.
 
 **django-find** is not a full text search engine, it searches the fields
-of your models. In other words, it searches and provides tabular data.
+of your models. In other words, it filters on your models and provides
+tabular data as a result.
 
 ### Query-based search
 
