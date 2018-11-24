@@ -86,3 +86,33 @@ The following example shows how to do that::
 In other words, add a "searchable" attribute to your models, that lists the
 aliases and maps them to a Django field using Django's selector syntax
 (underscore-separated field names).
+
+Using the template tag
+----------------------
+
+django-find also provides a template tag that you can use to
+render a search field::
+
+    {% load find_tags %}
+    {% find object_list %}
+    {% for obj in object_list %}
+        {{ obj.name }}
+    {% endfor %}
+
+You will probably want to use this together with
+`dj-pagination <https://github.com/pydanny/dj-pagination>`_ like so::
+
+    {% load find_tags %}
+    {% load pagination_tags %}
+
+    {% find object_list %}
+    Found {{ object_list.count }} results.
+
+    {% autopaginate object_list %}
+    <table>
+    {% for obj in object_list %}
+        <tr><td>{{ obj.name }}</td></tr>
+    {% endfor %}
+    </table>
+
+    {% paginate %}

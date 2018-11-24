@@ -31,6 +31,18 @@ to search your model:
 In other words, you can write anything from super-simple text based
 searches, to complex boolean logic.
 
+You can use this language from your own code, or by using a templatetag:
+
+```
+{% load find_tags %}
+{% find object_list %}
+{% for obj in object_list %}
+  {{ obj.name }}
+{% endfor %}
+```
+
+(object\_list is a queryset that is passed to the template)
+
 ### JSON-based search
 
 To make it easy to do complex searches spanning multiple models, another

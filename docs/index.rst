@@ -55,6 +55,15 @@ For this, a JSON-based search functionality is provided::
 django-find is smart in figuring out how to join those models
 together and return a useful result.
 
+django-find also provides a template tag that you can use to
+render a search field::
+
+    {% load find_tags %}
+    {% find object_list %}
+    {% for obj in object_list %}
+        {{ obj.name }}
+    {% endfor %}
+
 What isn't django-find?
 =======================
 

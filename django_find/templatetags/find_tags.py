@@ -22,7 +22,7 @@ class SearchNode(template.Node):
         return render_to_string('django_find/form.html',
                                 {'getvars': getvars})
 
-def do_search(parser, token):
+def find(parser, token):
     contents = token.split_contents()
     if len(contents) < 2:
         raise template.TemplateSyntaxError(
@@ -32,4 +32,4 @@ def do_search(parser, token):
     return SearchNode(contents[1], contents[2:])
 
 register = template.Library()
-register.tag('search', do_search)
+register.tag('find', find)
