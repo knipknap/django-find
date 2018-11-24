@@ -1,8 +1,8 @@
 {% load i18n %}
-<form action="" method="GET">
+<form class="django-find-form" action="" method="GET">
 {% for key, value in getvars.iteritems %}
     <input type="hidden" name="{{key}}" value="{{value}}"></input>
 {% endfor %}
-    <input type="text" class="search-text" name="search" value="{{getvars.q}}"></input>
+    <input type="text" class="search-text" name="q" value="{{getvars.q}}"></input>
     <input type="submit" class="search-button" value="{% trans 'Find' %}"></input>
 </form>

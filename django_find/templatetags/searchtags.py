@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function
 from django import template
 from django.template.loader import render_to_string
-from ..search import raw_search
 
 class SearchNode(template.Node):
     def __init__(self, queryset_var, fields):
