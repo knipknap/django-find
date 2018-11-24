@@ -33,3 +33,7 @@ class QueryParserTest(TestCase):
 
         dom = self.parser.parse(query2)
         self.assertEqual(expected_dom2, dom.dump())
+
+        dom1 = self.parser.parse("host:^test$")
+        dom2 = self.parser.parse("host=test")
+        self.assertEqual(dom1.dump(), dom2.dump())

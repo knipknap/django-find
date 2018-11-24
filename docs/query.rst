@@ -46,11 +46,15 @@ To search a string at the end of a field, use::
 	test$
 	author:frost$
 
-To look for an exact match, use both::
+To look for an exact match, use eith both, ``^`` and ``$``, or
+use an equal sign (``=``) instead. The following queries all look
+for an exact match::
 
 	^test$
 	author:^frost$
+	author=frost
 	author:"^robert frost$"
+	author="robert frost"
 
 Search individual model fields
 ------------------------------

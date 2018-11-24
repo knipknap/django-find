@@ -9,7 +9,7 @@ tokens = [('and', re.compile(r'and\b', re.I)),
           ('openbracket', re.compile(r'\(')),
           ('closebracket', re.compile(r'\)')),
           ('whitespace', re.compile(r'\s+')),
-          ('field', re.compile(r'([\w\-]+):')),
+          ('field', re.compile(r'([\w\-]+)([:=])')),
           ('word', re.compile(r'"([^"]*)"')),
           ('word', re.compile(r'([^"\s\\\'\)]+)')),
           ('unknown', re.compile(r'.'))]
@@ -61,12 +61,18 @@ class QueryParser(Parser):
             return
 
         # A field value is required.
+        op = match.group(2)
         token, match = self._get_next_token()
         try:
             value = match.group(1)
         except IndexError:
             return
-        value, operator = op_from_word(value)
+
+        if op == '=':
+            operator = 'equals'
+        else:
+            value, operator = op_from_word(value)
+
         scopes[-1].add(Term(field, operator, value))
         close_scope(scopes)
 
