@@ -23,10 +23,10 @@ class SearchableTest(TestCase):
         self.assertEqual(expected, Book.get_fullnames())
 
     def testTableHeaders(self):
-        expected = ['Name', 'rating']
+        expected = ['Name', 'Stars']
         self.assertEqual(expected, Author.table_headers())
 
-        expected = ['Name', 'The title', 'comment', 'Stars', 'Author']
+        expected = ['Name', 'The title', 'Comment', 'Stars', 'AuthorID']
         self.assertEqual(expected, Book.table_headers())
 
     def testGetFieldFromSelector(self):
