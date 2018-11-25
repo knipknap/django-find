@@ -1,4 +1,1 @@
-future
-Django>=1.11,<2
-mysqlclient
-dateparser
+.
