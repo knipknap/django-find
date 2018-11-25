@@ -38,7 +38,7 @@ setup(
     install_requires=['future',
                       'Django>=1.11,<2',
                       'mysqlclient',
-                      'dateparser']
+                      'dateparser'],
     keywords=' '.join(['django',
                        'search',
                        'find',
