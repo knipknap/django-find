@@ -45,7 +45,13 @@ mixin to your models. Example::
             rating = models.IntegerField("Rating")
             internal_id = models.CharField(max_length=10)
 
-That is all, your models now provide the following methods::
+That is all, you are now ready to query your models using your own code,
+or in your templates.
+
+Query from your own code
+------------------------
+
+All models having the Searchable mixin added provide the following methods::
 
         # Query-based search returns a standard Django QuerySet that you
         # can .filter() and work with as usual.
@@ -87,8 +93,11 @@ In other words, add a "searchable" attribute to your models, that lists the
 aliases and maps them to a Django field using Django's selector syntax
 (underscore-separated field names).
 
+Query from within templates
+---------------------------
+
 Using the template tag
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 django-find also provides a template tag that you can use to
 render a search field::
@@ -116,3 +125,17 @@ You will probably want to use this together with
     </table>
 
     {% paginate %}
+
+Using provided templates
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+django-find comes with some templates that you may find useful::
+
+    {% include 'django_find/headers.html' with object_list=author.objects.all %}
+
+This produces a ``<tr>`` that contains the column headers as returned
+by ``Searchable.table_headers()``, e.g.::
+
+    <tr>
+    <th>Name</th><th>The title</th><th>Comment</th><th>Stars</th>
+    </tr>

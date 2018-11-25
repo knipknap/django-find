@@ -17,7 +17,7 @@ class DummyModel(models.Model, Searchable):
 
 class Author(models.Model, Searchable):
     name = models.CharField("Name", max_length=10)
-    rating = models.IntegerField()
+    rating = models.IntegerField("Stars")
 
     searchable = [
         ('author', 'name'),
@@ -31,9 +31,9 @@ class DerivedAuthor(Author):
         app_label = 'search_tests'
 
 class Book(models.Model, Searchable):
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='Author')
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name='AuthorID')
     title = models.CharField("The title", max_length=10)
-    comment = models.CharField(max_length=10)
+    comment = models.CharField("Comment", max_length=10)
     rating = models.IntegerField("Stars")
 
     searchable = [

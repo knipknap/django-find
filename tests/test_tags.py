@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 from django.test import TestCase
-from django.template import Template
-from django.template import Context
 from django.test.client import RequestFactory
+from django.template import Template, Context
 from .models import Author
 
-tmpl = '''
+form_tmpl = '''
 {% load find_tags %}
 {% find object_list %}
 {% for obj in object_list %}{{ obj.name }},{% endfor %}
@@ -42,11 +41,15 @@ expected_form3 = '''
 
 '''.lstrip()
 
-class TemplateTagTest(TestCase):
+expected_headers1 = '''
+
+'''.lstrip()
+
+class TemplateTagFindTest(TestCase):
     def setUp(self):
         self.maxDiff = None
         self.factory = RequestFactory()
-        self.template = Template(tmpl)
+        self.template = Template(form_tmpl)
         self.context = Context()
         self.context['object_list'] = Author.objects.all
         for i in range(11):
