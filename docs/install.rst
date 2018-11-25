@@ -35,6 +35,34 @@ Add "django_find" to your ``INSTALLED_APPS`` setting like this::
         'django_find',
     ]
 
+Make sure that the request object is available to templates!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you haven't already, you should also install Django's
+`django.template.context_processors.request <https://docs.djangoproject.com/en/2.1/ref/templates/api/#django-template-context-processors-request>`_
+and
+`django.template.context_processors.i18n <https://docs.djangoproject.com/en/2.1/ref/templates/api/#django-template-context-processors-i18n>`_.
+
+In other words, your settings need to set the TEMPLATES
+variable to include the context_processors like so::
+
+	TEMPLATES = [
+	    {
+		'BACKEND': 'django.template.backends.django.DjangoTemplates',
+		'DIRS': [
+		    # ...
+		],
+		'APP_DIRS': True,
+		'OPTIONS': {
+		    'context_processors': [
+			# ...
+			'django.template.context_processors.i18n',
+			'django.template.context_processors.request',
+		    ],
+		},
+	    },
+	]
+
 Add it to your models
 ~~~~~~~~~~~~~~~~~~~~~
 
