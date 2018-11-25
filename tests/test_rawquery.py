@@ -9,7 +9,10 @@ class PaginatedRawQuerySetTest(TestCase):
         for i in range(10):
             Author.objects.create(name='Foo'+str(i), rating=10)
         sql = 'SELECT name, rating FROM '+Author._meta.db_table+' ORDER BY name'
-        self.query = PaginatedRawQuerySet(sql)
+        self.query = PaginatedRawQuerySet(Author, sql)
+
+    def testModel(self):
+        self.assertEqual(self.query.model, Author)
 
     def testGetItem(self):
         self.assertEqual(self.query[0], ('Foo0', 10))

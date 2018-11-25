@@ -286,7 +286,7 @@ class Searchable(object):
                                                mode=mode,
                                                fullnames=fullnames,
                                                extra_model=extra_model)
-        return PaginatedRawQuerySet(sql, args), fields
+        return PaginatedRawQuerySet(cls, sql, args), fields
 
     @classmethod
     def sql_from_json(cls, json_string, mode='SELECT', extra_model=None):
@@ -297,4 +297,4 @@ class Searchable(object):
     def by_json_raw(cls, json_string, extra_model=None):
         sql, args, fields = cls.sql_from_json(json_string,
                                               extra_model=extra_model)
-        return PaginatedRawQuerySet(sql, args), fields
+        return PaginatedRawQuerySet(cls, sql, args), fields

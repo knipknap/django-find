@@ -8,7 +8,8 @@ def assert_positive_slice(slc):
        raise IndexError("Negative indexing is not supported")
 
 class PaginatedRawQuerySet(object):
-    def __init__(self, raw_query, args=None, limit=None, offset=None):
+    def __init__(self, model, raw_query, args=None, limit=None, offset=None):
+        self.model = model
         self.raw_query = raw_query
         self.args = args if args else []
         self.limit = limit
@@ -17,7 +18,9 @@ class PaginatedRawQuerySet(object):
         self.count_cache = None
 
     def __copy__(self):
-        return self.__class__(self.raw_query, self.args,
+        return self.__class__(self.model,
+                              self.raw_query,
+                              self.args,
                               limit=self.limit,
                               offset=self.offset)
 
