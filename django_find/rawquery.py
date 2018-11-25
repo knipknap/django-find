@@ -74,3 +74,5 @@ class PaginatedRawQuerySet(object):
             row = cursor.fetchone()
             self.count_cache = int(row[0])
         return self.count_cache
+
+    count = property(__len__) # For better compatibility to Django's QuerySet

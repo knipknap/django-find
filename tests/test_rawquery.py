@@ -50,3 +50,11 @@ class PaginatedRawQuerySetTest(TestCase):
         self.assertEqual(len(self.query[:8]), 8)
         self.assertEqual(len(self.query[:]), 10)
         self.assertEqual(len(self.query[1:]), 9)
+
+    def testCount(self):
+        self.assertEqual(self.query.count, 10)
+        self.assertEqual(self.query.count, 10) # Cached
+        self.assertEqual(self.query[2:8].count, 6)
+        self.assertEqual(self.query[:8].count, 8)
+        self.assertEqual(self.query[:].count, 10)
+        self.assertEqual(self.query[1:].count, 9)
