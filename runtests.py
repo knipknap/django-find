@@ -36,6 +36,21 @@ ALWAYS_MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.request',
+            ],
+        },
+    },
+]
 
 settings.configure(
     SECRET_KEY="django_tests_secret_key",
@@ -44,6 +59,7 @@ settings.configure(
     ALLOWED_HOSTS=[],
     INSTALLED_APPS=ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS,
     MIDDLEWARE_CLASSES=ALWAYS_MIDDLEWARE_CLASSES,
+    TEMPLATES=TEMPLATES,
     ROOT_URLCONF='tests.urls',
     DATABASES={
         'default': {
