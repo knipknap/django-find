@@ -66,7 +66,7 @@ variable to include the context_processors like so::
 Add it to your models
 ~~~~~~~~~~~~~~~~~~~~~
 
-You are now ready to start using the Searchable decorator.
+You are now ready to start using the Searchable mixin.
 For more information, please continue with the
 :doc:`tutorial <tutorial>`.
 
