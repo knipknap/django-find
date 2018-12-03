@@ -11,17 +11,7 @@ from .serializers.django import DjangoSerializer
 from .refs import get_subclasses, get_object_vector_to, get_object_vector_for
 from .rawquery import PaginatedRawQuerySet
 from .model_helpers import sql_from_dom
-
-type_map = (
-        (models.CharField, 'LCSTR'),
-        (models.TextField, 'LCSTR'),
-        (models.GenericIPAddressField, 'LCSTR'),
-        (models.BooleanField, 'BOOL'),
-        (models.IntegerField, 'INT'),
-        (models.AutoField, 'INT'),
-        (models.DateTimeField, 'DATETIME'),
-        (models.DateField, 'DATE'),
-)
+from .handlers import type_registry
 
 class Searchable(object):
     """
@@ -58,9 +48,9 @@ class Searchable(object):
     def get_field_type_from_field(cls, field):
         if isinstance(field, models.ForeignKey):
             field = field.target_field
-        for field_model, typename in type_map:
-            if isinstance(field, field_model):
-                return typename
+        for handler in type_registry:
+            if handler.handles(field):
+                return handler.db_type
         raise TypeError('field {}.{} is of type {}, which is unsupported'.format(
             cls.__name__,
             field.name,
