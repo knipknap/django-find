@@ -45,12 +45,12 @@ class Searchable(object):
         return field.name.capitalize()
 
     @classmethod
-    def get_field_type_from_field(cls, field):
+    def get_field_handler_from_field(cls, field):
         if isinstance(field, models.ForeignKey):
             field = field.target_field
         for handler in type_registry:
             if handler.handles(field):
-                return handler.db_type
+                return handler
         raise TypeError('field {}.{} is of type {}, which is unsupported'.format(
             cls.__name__,
             field.name,
@@ -105,33 +105,29 @@ class Searchable(object):
         return model, model._meta.get_field(selector)
 
     @classmethod
-    def get_field_type_from_alias(cls, alias):
+    def get_field_handler_from_alias(cls, alias):
         """
         Given an alias, e.g. 'host', 'name',
-        this function returns the target type, e.g.::
-
-            'LCSTR'
+        this function returns the handler.Handler.
 
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
         selector = cls.get_selector_from_alias(alias)
         field = cls.get_field_from_selector(selector)[1]
-        return cls.get_field_type_from_field(field)
+        return cls.get_field_handler_from_field(field)
 
     @classmethod
-    def get_field_type_from_fullname(cls, fullname):
+    def get_field_handler_from_fullname(cls, fullname):
         """
         Given a fullname, e.g. 'Device.host', 'Author.name',
-        this function returns the target type, e.g.::
-
-            'LCSTR'
+        this function returns the handler.Handler.
 
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
         thecls, alias = cls.get_class_from_fullname(fullname)
-        return thecls.get_field_type_from_alias(alias)
+        return thecls.get_field_handler_from_alias(alias)
 
     @classmethod
     def get_selector_from_alias(cls, alias):

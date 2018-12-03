@@ -74,7 +74,7 @@ class DjangoSerializer(Serializer):
             return Q()
 
         cls, alias = self.model.get_class_from_fullname(name)
-        field_type = cls.get_field_type_from_alias(alias)
+        handler = cls.get_field_handler_from_alias(alias)
         selector = self.model.get_selector_from_fullname(name)
 
         type_map = {'BOOL': self.boolean_term,
@@ -84,7 +84,7 @@ class DjangoSerializer(Serializer):
                     'DATE': self.date_term,
                     'DATETIME': self.datetime_term}
 
-        func = type_map.get(field_type)
+        func = type_map.get(handler.db_type)
         if not func:
             raise TypeError('unsupported field type: '+repr(field_type))
-        return func(selector, operator, data)
+        return func(selector, operator, handler.prepare(data))

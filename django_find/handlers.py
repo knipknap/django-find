@@ -1,26 +1,25 @@
 from django.db import models
 
 class Handler(object):
-    db_type = 'LCSTR'
-
-    def __init__(self, value):
-        self.value = value
+    db_type = None
 
     @classmethod
     def handles(cls, field):
         raise NotImplemented
 
-    def prepare(self):
-        return self.value
+    @classmethod
+    def prepare(cls, value):
+        return value
 
 class StrHandler(Handler):
+    db_type = 'STR'
+
     @classmethod
     def handles(cls, field):
         return isinstance(field, (models.CharField, models.TextField))
 
 class LowerCaseStrHandler(StrHandler):
-    def prepare(self):
-        return self.value.lower()
+    db_type = 'LCSTR'
 
 class IPAddressHandler(LowerCaseStrHandler):
     @classmethod

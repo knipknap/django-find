@@ -141,14 +141,14 @@ class SQLSerializer(Serializer):
         data = escape_string(data).decode('utf-8')
 
         # Handle case-insensitive queries.
-        field_type = model.get_field_type_from_alias(alias)
-        if field_type == 'LCSTR':
+        handler = model.get_field_handler_from_alias(alias)
+        if handler.db_type == 'LCSTR':
             data = data.lower()
             # This is actually useless, because LIKE is case insensitive
             # normally, but it makes testing easier. Try removing it and
             # run the tests to see why.
-        elif field_type == 'DATE':
-            return self.date_term(db_column, operator, data)
-        elif field_type == 'DATETIME':
-            return self.datetime_term(db_column, operator, data)
-        return self.other_term(db_column, operator, data)
+        elif handler.db_type == 'DATE':
+            return self.date_term(db_column, operator, handler.prepare(data))
+        elif handler.db_type == 'DATETIME':
+            return self.datetime_term(db_column, operator, handler.prepare(data))
+        return self.other_term(db_column, operator, handler.prepare(data))
