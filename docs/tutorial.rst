@@ -139,3 +139,9 @@ by ``Searchable.table_headers()``, e.g.::
     <tr>
     <th>Name</th><th>The title</th><th>Comment</th><th>Stars</th>
     </tr>
+
+Custom field types
+------------------
+
+To support your own field types, check the documentation for
+:doc:`handlers <handlers>`.
