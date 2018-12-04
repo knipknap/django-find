@@ -48,7 +48,7 @@ class SearchableTest(TestCase):
         self.assertEqual(func('author'), LowerCaseStrHandler)
         self.assertEqual(func('rating'), IntegerHandler)
 
-    def testGetFieldHandlerFromAlias(self):
+    def testGetFieldHandlerFromFullname(self):
         func = Author.get_field_handler_from_fullname
         self.assertRaises(AttributeError, func, 'foo')
         self.assertEqual(func('Author.name'), LowerCaseStrHandler)
