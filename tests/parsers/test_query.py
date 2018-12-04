@@ -22,6 +22,21 @@ expected_dom2 = """Group(root)
     Term: Device.model contains 'foo'
     Term: Unit.interface endswith 'bar'"""
 
+query3 = 'host<z host>a host!:no host:yes host!=no host=yes host>=c host<=g host<>no'
+expected_dom3 = """Group(root)
+  Term: Device.metadata_id lt 'z'
+  Term: Device.metadata_id gt 'a'
+  Not
+    Term: Device.metadata_id contains 'no'
+  Term: Device.metadata_id contains 'yes'
+  Not
+    Term: Device.metadata_id equals 'no'
+  Term: Device.metadata_id equals 'yes'
+  Term: Device.metadata_id gte 'c'
+  Term: Device.metadata_id lte 'g'
+  Not
+    Term: Device.metadata_id equals 'no'"""
+
 class QueryParserTest(TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -37,3 +52,6 @@ class QueryParserTest(TestCase):
         dom1 = self.parser.parse("host:^test$")
         dom2 = self.parser.parse("host=test")
         self.assertEqual(dom1.dump(), dom2.dump())
+
+        dom = self.parser.parse(query3)
+        self.assertEqual(expected_dom3, dom.dump())

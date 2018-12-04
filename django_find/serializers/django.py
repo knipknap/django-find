@@ -4,6 +4,20 @@ from django.db.models import Q
 from .serializer import Serializer
 from .util import parse_date, parse_datetime
 
+int_op_map = {'equals': 'exact',
+              'contains': 'exact',
+              'startswith': 'gte',
+              'endswith': 'lte'}
+
+str_op_map = {'equals': 'exact',
+              'gt': 'startswith',
+              'gte': 'startswith',
+              'lt': 'endswith',
+              'lte': 'endswith'}
+
+date_op_map = {'startswith': 'gte',
+               'endswith': 'lte'}
+
 class DjangoSerializer(Serializer):
     def __init__(self, model):
         Serializer.__init__(self)
@@ -33,29 +47,28 @@ class DjangoSerializer(Serializer):
             value = int(data)
         except ValueError:
             return Q()
-        else:
+        operator = int_op_map.get(operator, operator)
+        if operator == 'exact':
             return Q(**{selector: value})
+        return Q(**{selector+'__'+operator: value})
 
     def str_term(self, selector, operator, data):
-        if operator == 'equals':
-            operator = 'exact'
-        elif operator == 'iequals':
-            operator = 'iexact'
+        operator = str_op_map.get(operator, operator)
         return Q(**{selector+'__'+operator: data})
 
     def lcstr_term(self, selector, operator, data):
-        return self.str_term(selector, 'i'+operator, data)
+        operator = str_op_map.get(operator, operator)
+        return Q(**{selector+'__i'+operator: data})
 
     def date_datetime_common(self, selector, operator, thedatetime):
         if not thedatetime:
             return Q()
-        if operator == 'startswith':
-            return Q(**{selector+'__gte': thedatetime})
-        elif operator == 'endswith':
-            return Q(**{selector+'__lte': thedatetime})
-        return Q(**{selector+'__year': thedatetime.year,
-                    selector+'__month': thedatetime.month,
-                    selector+'__day': thedatetime.day})
+        operator = date_op_map.get(operator, operator)
+        if operator in ('contains', 'equals'):
+            return Q(**{selector+'__year': thedatetime.year,
+                        selector+'__month': thedatetime.month,
+                        selector+'__day': thedatetime.day})
+        return Q(**{selector+'__'+operator: thedatetime})
 
     def date_term(self, selector, operator, data):
         thedate = parse_date(data)

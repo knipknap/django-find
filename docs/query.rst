@@ -136,22 +136,54 @@ For a full list of supported formats, please check the
 Searching for ranges
 ~~~~~~~~~~~~~~~~~~~~
 
-When searching for dates and times, the ``^`` and ``$`` have special
-meanings: You can use them to look for time ranges. The following query
+You can use them to look for time ranges. The following query
 returns all entries that were updated after the beginning of
 January 1st, 12:00am::
 
-	updated:^2018-1-1
+	updated>=2018-1-1
 
 Similarly, you can get the entries that were updated before 2018::
 
-	updated:2018-1-1$
+	updated<2018-1-1
 
 To look for a range, use AND::
 
-	updated:^2018-1-1 updated:2019-1-1$
-	updated:^2018-1-1 AND updated:2019-1-1$
+	updated>=2018-1-1 updated<=2019-1-1
+	updated>=2018-1-1 AND updated<=2019-1-1
+
+When searching for dates and times, the ``^`` and ``$`` characters
+have special meanings: They are equivalent to ``<=`` and ``>=``. In
+other words, the following queries are equivalent when used on a
+DateField or DateTimeField::
+
+	updated:^2018-1-1
+	updated>=2018-1-1
 
 To look for an exact match, use both::
 
 	updated:"^2018-1-1 11:00$"
+
+Operator list
+-------------
+
+Here is the full list of operators supported by **django-find**::
+
+	``name=foo`` Name matching "foo" exactly
+	``name:^foo$`` Equivalent to the previous query
+	``name!=foo`` Name not matching "foo" exactly
+	``name<>foo`` Equivalent to the previous query
+
+	``name:foo`` Name containing the substring "foo"
+	``name!:foo`` Name not containing the substring "foo"
+	``name:^foo`` Name starting with the substring "foo"
+	``name!:^foo`` Name not starting the substring "foo"
+	``name:foo$`` Name ending with the substring "foo"
+	``name!:foo$`` Name not ending the substring "foo"
+
+	``id>1`` Greater than
+	``id>=1`` Greater than or equal
+	``id=>1`` Greater than or equal
+	``id<5`` Less than
+	``id<=5`` Less than or equal
+	``id=>5`` Less than or equal
+	``id<>5`` Unequal

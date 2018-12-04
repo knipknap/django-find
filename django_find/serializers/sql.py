@@ -5,8 +5,27 @@ from ..refs import get_join_for
 from .serializer import Serializer
 from .util import parse_date, parse_datetime
 
+int_op_map = {'equals': 'equals',
+              'contains': 'equals',
+              'startswith': 'gte',
+              'endswith': 'lte'}
+
+str_op_map = {'gt': 'startswith',
+              'gte': 'startswith',
+              'lt': 'endswith',
+              'lte': 'endswith'}
+
+date_op_map = {'contains': 'equals',
+               'startswith': 'gte',
+               'endswith': 'lte'}
+
 operator_map = {
     'equals': "='{}'",
+    'iequals': " LIKE '{}'",
+    'lt': "<'{}'",
+    'lte': "<='{}'",
+    'gt': ">'{}'",
+    'gte': ">='{}'",
     'startswith': " LIKE '{}%%'",
     'endswith': " LIKE '%%{}'",
     'contains': " LIKE '%%{}%%'",
@@ -14,6 +33,19 @@ operator_map = {
 
 def _mkcol(tbl, name):
     return tbl+'.'+name+' '+tbl+'_'+name
+
+def _mk_condition(db_column, operator, data):
+    op = operator_map.get(operator)
+    if not op:
+        raise Exception('unsupported operator:' + str(operator))
+
+    # I would prefer to use a prepared statement, but collecting arguments
+    # and passing them back along the string everywhere would be awful design.
+    # (Also, I didn't find any API from Django to generate a prepared statement
+    # without already executing it, e.g. django.db.connection.execute())
+    if isinstance(data, int):
+        return db_column+op.format(data)
+    return db_column+op.format(escape_string(data).decode('utf-8'))
 
 class SQLSerializer(Serializer):
     def __init__(self, model, mode='SELECT', fullnames=None, extra_model=None):
@@ -100,14 +132,33 @@ class SQLSerializer(Serializer):
             return 'NOT(' + terms[0] + ')'
         return 'NOT ' + self.logical_and(terms)
 
+    def boolean_term(self, db_column, operator, data):
+        value = 'TRUE' if data.lower() == 'true' else 'FALSE'
+        return _mk_condition(db_column, operator, value)
+
+    def int_term(self, db_column, operator, data):
+        try:
+            value = int(data)
+        except ValueError:
+            return '1'
+        operator = int_op_map.get(operator, operator)
+        return _mk_condition(db_column, operator, value)
+
+    def str_term(self, db_column, operator, data):
+        operator = str_op_map.get(operator, operator)
+        return _mk_condition(db_column, operator, data)
+
+    def lcstr_term(self, db_column, operator, data):
+        operator = str_op_map.get(operator, operator)
+        if operator == 'equals':
+            operator = 'iequals'
+        return _mk_condition(db_column, operator, data.lower())
+
     def date_datetime_common(self, db_column, operator, thedatetime):
         if not thedatetime:
             return ''
-        if operator == 'startswith':
-            return db_column+'>='+thedatetime.isoformat()
-        elif operator == 'endswith':
-            return db_column+'<='+thedatetime.isoformat()
-        return db_column+'='+thedatetime.isoformat()
+        operator = date_op_map.get(operator, operator)
+        return _mk_condition(db_column, operator, thedatetime.isoformat())
 
     def date_term(self, db_column, operator, data):
         thedate = parse_date(data)
@@ -117,19 +168,6 @@ class SQLSerializer(Serializer):
         thedatetime = parse_datetime(data)
         return self.date_datetime_common(db_column, operator, thedatetime)
 
-    def other_term(self, db_column, operator, data):
-        # Generate the LIKE or "=" statement.
-        op = operator_map.get(operator)
-        if not op:
-            raise Exception('unsupported operator:' + str(operator))
-
-        # Yes, I would prefer to use a prepared statement, but collecting arguments
-        # and passing them back along the string everywhere would be awful design,
-        # and if you prefer that, you are a bad software developer.
-        # (Also, I didn't find any API from Django to generate a prepared statement
-        # without already executing it, e.g. django.db.connection.execute())
-        return db_column+op.format(escape_string(data).decode('utf-8'))
-
     def term(self, term_name, operator, data):
         if operator == 'any':
             return '1'
@@ -138,17 +176,16 @@ class SQLSerializer(Serializer):
         selector = model.get_selector_from_alias(alias)
         target_model, field = model.get_field_from_selector(selector)
         db_column = target_model._meta.db_table + '.' + field.column
-        data = escape_string(data).decode('utf-8')
-
-        # Handle case-insensitive queries.
         handler = model.get_field_handler_from_alias(alias)
-        if handler.db_type == 'LCSTR':
-            data = data.lower()
-            # This is actually useless, because LIKE is case insensitive
-            # normally, but it makes testing easier. Try removing it and
-            # run the tests to see why.
-        elif handler.db_type == 'DATE':
-            return self.date_term(db_column, operator, handler.prepare(data))
-        elif handler.db_type == 'DATETIME':
-            return self.datetime_term(db_column, operator, handler.prepare(data))
-        return self.other_term(db_column, operator, handler.prepare(data))
+
+        type_map = {'BOOL': self.boolean_term,
+                    'INT': self.int_term,
+                    'STR': self.str_term,
+                    'LCSTR': self.lcstr_term,
+                    'DATE': self.date_term,
+                    'DATETIME': self.datetime_term}
+
+        func = type_map.get(handler.db_type)
+        if not func:
+            raise TypeError('unsupported field type: '+repr(field_type))
+        return func(db_column, operator, handler.prepare(data))

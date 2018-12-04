@@ -1,15 +1,31 @@
 from __future__ import absolute_import, print_function
 import re
+from collections import OrderedDict
 from .parser import Parser
 from ..dom import Group, And, Or, Not, Term
 
+operators = OrderedDict((
+    ('!=', 'notequals'),
+    ('<>', 'notequals'),
+    ('>=', 'gte'),
+    ('=>', 'gte'),
+    ('>', 'gt'),
+    ('<=', 'lte'),
+    ('=<', 'lte'),
+    ('<', 'lt'),
+    (':', 'contains'),
+    ('!:', 'notcontains'),
+    ('=', 'equals'),
+))
+
+operators_str = '|'.join(operators.keys())
 tokens = [('and', re.compile(r'and\b', re.I)),
           ('or', re.compile(r'or\b', re.I)),
           ('not', re.compile(r'not\b', re.I)),
           ('openbracket', re.compile(r'\(')),
           ('closebracket', re.compile(r'\)')),
           ('whitespace', re.compile(r'\s+')),
-          ('field', re.compile(r'([\w\-]+)([:=])')),
+          ('field', re.compile(r'([\w\-]+)({})'.format(operators_str))),
           ('word', re.compile(r'"([^"]*)"')),
           ('word', re.compile(r'([^"\s\\\'\)]+)')),
           ('unknown', re.compile(r'.'))]
@@ -29,6 +45,19 @@ def op_from_word(word):
     elif word.endswith('$'):
         return word[:-1], 'endswith'
     return word, 'contains'
+
+def get_term_from_op(field, operator, value):
+    op = operators.get(operator)
+
+    if op == 'contains':
+        value, op = op_from_word(value)
+    if op == 'notcontains':
+        value, op = op_from_word(value)
+        op = 'not'+op
+
+    if op.startswith('not'):
+        return Not(Term(field, op[3:], value))
+    return Term(field, op, value)
 
 class QueryParser(Parser):
     def __init__(self, fields, default):
@@ -68,12 +97,8 @@ class QueryParser(Parser):
         except IndexError:
             return
 
-        if op == '=':
-            operator = 'equals'
-        else:
-            value, operator = op_from_word(value)
-
-        scopes[-1].add(Term(field, operator, value))
+        term = get_term_from_op(field, op, value)
+        scopes[-1].add(term)
         close_scope(scopes)
 
     def parse_boolean(self, scopes, dom_cls, match):

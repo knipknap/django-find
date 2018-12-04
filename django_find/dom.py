@@ -2,6 +2,16 @@ from __future__ import absolute_import, print_function
 from builtins import str
 from .tree import Node
 
+operators = ['contains',
+             'equals',
+             'startswith',
+             'endswith',
+             'gt',
+             'gte',
+             'lt',
+             'lte',
+             'any']
+
 class Group(Node):
     def translate_term_names(self, name_map):
         def translate(dom_obj):
@@ -68,6 +78,7 @@ class Not(Group):
 
 class Term(Node):
     def __init__(self, name, operator, data):
+        assert operator in operators, "unsupported operator {}".format(operator)
         Node.__init__(self)
         self.name = name
         self.operator = str(operator)
