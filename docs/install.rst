@@ -4,9 +4,7 @@ Installation
 Prerequisites
 -------------
 
-django-find requires Python 2.7 or Python 3.5 or greater, and the following modules:
-
-.. literalinclude:: ../requirements.txt
+django-find requires Python 2.7 or Python 3.5 or greater.
 
 Getting started
 ---------------
