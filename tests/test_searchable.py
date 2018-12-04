@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from django.test import TestCase
-from django_find.handlers import LowerCaseStrHandler, IntegerHandler
+from django_find.handlers import LowerCaseStrFieldHandler, IntegerFieldHandler
 from .models import Author, DerivedAuthor, SecondAuthor, Book, Chapter, \
         DummyModel, SimpleModel
 
@@ -44,16 +44,16 @@ class SearchableTest(TestCase):
     def testGetFieldHandlerFromAlias(self):
         func = Author.get_field_handler_from_alias
         self.assertRaises(KeyError, func, 'foo')
-        self.assertEqual(func('name'), LowerCaseStrHandler)
-        self.assertEqual(func('author'), LowerCaseStrHandler)
-        self.assertEqual(func('rating'), IntegerHandler)
+        self.assertEqual(func('name'), LowerCaseStrFieldHandler)
+        self.assertEqual(func('author'), LowerCaseStrFieldHandler)
+        self.assertEqual(func('rating'), IntegerFieldHandler)
 
     def testGetFieldHandlerFromFullname(self):
         func = Author.get_field_handler_from_fullname
         self.assertRaises(AttributeError, func, 'foo')
-        self.assertEqual(func('Author.name'), LowerCaseStrHandler)
-        self.assertEqual(func('Book.author'), LowerCaseStrHandler)
-        self.assertEqual(func('Book.rating'), IntegerHandler)
+        self.assertEqual(func('Author.name'), LowerCaseStrFieldHandler)
+        self.assertEqual(func('Book.author'), LowerCaseStrFieldHandler)
+        self.assertEqual(func('Book.rating'), IntegerFieldHandler)
 
     def testGetSelectorFromAlias(self):
         func = Author.get_selector_from_alias

@@ -49,12 +49,15 @@ class Searchable(object):
         if isinstance(field, models.ForeignKey):
             field = field.target_field
         for handler in type_registry:
-            if handler.handles(field):
+            if handler.handles(cls, field):
                 return handler
-        raise TypeError('field {}.{} is of type {}, which is unsupported'.format(
-            cls.__name__,
-            field.name,
-            type(field)))
+        msg = 'field {}.{} is of type {}'.format(cls.__name__,
+                                                 field.name,
+                                                 type(field))
+        raise TypeError(msg + ', which has no field handler. Consider adding a '
+                      + 'django_find.handlers.FieldHandler to the '
+                      + 'django_find.handlers.type_registry. See the docs for'
+                      + 'more information')
 
     @classmethod
     def get_aliases(cls):
@@ -108,7 +111,7 @@ class Searchable(object):
     def get_field_handler_from_alias(cls, alias):
         """
         Given an alias, e.g. 'host', 'name',
-        this function returns the handler.Handler.
+        this function returns the handler.FieldHandler.
 
         @type name: str
         @param name: e.g. 'address', or 'name'
@@ -121,7 +124,7 @@ class Searchable(object):
     def get_field_handler_from_fullname(cls, fullname):
         """
         Given a fullname, e.g. 'Device.host', 'Author.name',
-        this function returns the handler.Handler.
+        this function returns the handler.FieldHandler.
 
         @type name: str
         @param name: e.g. 'address', or 'name'
