@@ -168,22 +168,22 @@ Operator list
 
 Here is the full list of operators supported by **django-find**::
 
-- ``name=foo`` Name matching "foo" exactly
-- ``name:^foo$`` Equivalent to the previous query
-- ``name!=foo`` Name not matching "foo" exactly
-- ``name<>foo`` Equivalent to the previous query
+	name=foo -> Name matching "foo" exactly
+	name:^foo$ -> Equivalent to the previous query
+	name!=foo -> Name not matching "foo" exactly
+	name<>foo -> Equivalent to the previous query
 
-- ``name:foo`` Name containing the substring "foo"
-- ``name!:foo`` Name not containing the substring "foo"
-- ``name:^foo`` Name starting with the substring "foo"
-- ``name!:^foo`` Name not starting the substring "foo"
-- ``name:foo$`` Name ending with the substring "foo"
-- ``name!:foo$`` Name not ending the substring "foo"
+	name:foo -> Name containing the substring "foo"
+	name!:foo -> Name not containing the substring "foo"
+	name:^foo -> Name starting with the substring "foo"
+	name!:^foo -> Name not starting the substring "foo"
+	name:foo$ -> Name ending with the substring "foo"
+	name!:foo$ -> Name not ending the substring "foo"
 
-- ``id>1`` Greater than
-- ``id>=1`` Greater than or equal
-- ``id=>1`` Greater than or equal
-- ``id<5`` Less than
-- ``id<=5`` Less than or equal
-- ``id=>5`` Less than or equal
-- ``id<>5`` Unequal
+	id>1 -> Greater than
+	id>=1 -> Greater than or equal
+	id=>1 -> Greater than or equal
+	id<5 -> Less than
+	id<=5 -> Less than or equal
+	id=>5 -> Less than or equal
+	id<>5 -> Unequal
