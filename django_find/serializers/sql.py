@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import str
+from collections import defaultdict, OrderedDict
 from MySQLdb import escape_string
 from ..refs import get_join_for
 from .serializer import Serializer
@@ -31,8 +32,8 @@ operator_map = {
     'contains': " LIKE '%%{}%%'",
     'regex': " REGEXP '%%{}%%'"}
 
-def _mkcol(tbl, name):
-    return tbl+'.'+name+' '+tbl+'_'+name
+def _mkcol(tbl, name, alias):
+    return tbl+'.'+name+' '+tbl+'_'+alias
 
 def _mk_condition(db_column, operator, data):
     op = operator_map.get(operator)
@@ -71,12 +72,23 @@ class SQLSerializer(Serializer):
     def _create_select(self, fields):
         # Create the "SELECT DISTINCT table1.col1, table2.col2, ..."
         # part of the SQL.
-        select = 'SELECT DISTINCT '+_mkcol(fields[0][1], fields[0][2])
-        for target_model, table, column in fields[1:]:
-            select += ', '+_mkcol(table, column)
+        col_numbers = defaultdict(int)
+        fullfields = []
+        for field in fields:
+            table, column = field[1:3]
+            key = "%s.%s" % (table, column)
+            col_number = col_numbers[key]
+            col_numbers[key] += 1
+            if len(field) == 3:
+                field = (field[0], table, column, column if col_number == 0 else "%s__%d" % (column, col_number))
+            fullfields.append(field)
+
+        select = 'SELECT DISTINCT '+_mkcol(fullfields[0][1], fullfields[0][2], fullfields[0][3])
+        for target_model, table, column, alias in fullfields[1:]:
+            select += ', '+_mkcol(table, column, alias)
 
         # Find the best way to join the tables.
-        target_models = [r[0] for r in fields]
+        target_models = [r[0] for r in fullfields]
         if self.extra_model:
             target_models.append(self.extra_model)
         vector = self.model.get_object_vector_for(target_models)
