@@ -68,13 +68,24 @@ class Searchable(object):
         return list(OrderedDict(cls.get_searchable()).keys())
 
     @classmethod
-    def get_fullnames(cls):
+    def get_fullnames(cls, unique=False):
         """
         Like get_aliases(), but returns the aliases prefixed by the class
         name.
         """
-        aliases = cls.get_aliases()
-        return [cls.__name__+'.'+alias for alias in aliases]
+        if unique:
+            selectors = set()
+            result = []
+            for item in cls.get_searchable():
+                selector = item[1]
+                if selector in selectors:
+                    continue
+                selectors.add(selector)
+                result.append(cls.__name__+'.'+item[0])
+            return result
+        else:
+            aliases = cls.get_aliases()
+            return [cls.__name__+'.'+alias for alias in aliases]
 
     @classmethod
     def table_headers(cls):

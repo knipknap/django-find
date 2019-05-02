@@ -9,15 +9,19 @@ class SearchableTest(TestCase):
         self.maxDiff = None
 
     def testGetAliases(self):
-        expected = ['name', 'rating', 'author']
+        expected = ['name', 'rating', 'author', 'writer']
         self.assertEqual(expected, Author.get_aliases())
 
         expected = ['author', 'title', 'comment', 'rating', 'something']
         self.assertEqual(expected, Book.get_aliases())
 
     def testGetFullNames(self):
-        expected = ['Author.name', 'Author.rating', 'Author.author']
+        expected = ['Author.name', 'Author.rating', 'Author.author', 'Author.writer']
         self.assertEqual(expected, Author.get_fullnames())
+
+        expected = ['Author.name', 'Author.rating']
+        self.assertEqual(expected, Author.get_fullnames(True))
+
 
         expected = ['Book.author', 'Book.title', 'Book.comment',
                     'Book.rating', 'Book.something']
@@ -111,7 +115,7 @@ class SearchableTest(TestCase):
         self.assertTrue('%testme%' in query.raw_query)
         self.failIf('Author' in query.raw_query)
         self.failIf('Book' in query.raw_query)
-        self.assertEqual(['Author.name', 'Author.rating', 'Author.author'], fields)
+        self.assertEqual(['Author.name', 'Author.rating', 'Author.author', 'Author.writer'], fields)
 
         query, fields = Book.by_query_raw('rating:5')
         self.assertTrue('WHERE ' in query.raw_query)

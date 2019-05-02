@@ -21,6 +21,7 @@ class Author(models.Model, Searchable):
 
     searchable = [
         ('author', 'name'),
+        ('writer', 'name'),
     ]
 
     class Meta:
