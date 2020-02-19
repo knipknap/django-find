@@ -37,6 +37,14 @@ class Group(Node):
     def optimize(self):
         children = [c.optimize() for c in self.children]
         self.children = [c for c in children if c is not None]
+        children = []
+        for child in self.children:
+            if type(child) == type(self):
+                for grandchild in child.children:
+                    children.append(grandchild)
+            else:
+                children.append(child)
+        self.children = children
         if not self.children and not self.is_root:
             return None
         if len(self.children) == 1 and not self.is_root:
@@ -50,19 +58,36 @@ class Group(Node):
         return strategy.logical_group(results)
 
 class And(Group):
-    def auto_leave_scope(self):
+    @classmethod
+    def is_logical(self):
         return True
+
+    @classmethod
+    def precedence(self):
+        return 2
 
     def serialize(self, strategy):
         return strategy.logical_and(c.serialize(strategy)
                                     for c in self.children)
 
 class Or(Group):
+    @classmethod
+    def is_logical(self):
+        return True
+
+    @classmethod
+    def precedence(self):
+        return 1
+
     def serialize(self, strategy):
         return strategy.logical_or(c.serialize(strategy)
                                    for c in self.children)
 
 class Not(Group):
+    @classmethod
+    def precedence(self):
+        return 3
+
     def auto_leave_scope(self):
         return True
 

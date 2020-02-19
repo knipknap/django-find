@@ -18,7 +18,6 @@ expected_dom2 = """Group(root)
   Or
     Term: Device.metadata_id contains 'test'
     Term: Device.model contains 'test'
-  Or
     Term: Device.model contains 'foo'
     Term: Unit.interface endswith 'bar'"""
 

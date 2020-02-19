@@ -74,6 +74,7 @@ class QueryParser(Parser):
                     +' "{}", which is not also in "fields"'.format(name))
 
     def parse_word(self, scopes, match):
+        self.parse_or(scopes, ())
         child = Or()
         for name in self.default:
             name = self.fields[name]
@@ -103,9 +104,13 @@ class QueryParser(Parser):
 
     def parse_boolean(self, scopes, dom_cls, match):
         try:
+            if scopes[-1].is_logical() and dom_cls.precedence() < scopes[-1].precedence():
+                scopes.pop()
+            if type(scopes[-1]).__name__ == dom_cls.__name__:
+                return
             last_term = scopes[-1].pop()
         except IndexError:
-            pass
+            open_scope(scopes, dom_cls())
         else:
             open_scope(scopes, dom_cls(last_term))
 
@@ -123,7 +128,7 @@ class QueryParser(Parser):
 
     def parse_closebracket(self, scopes, match):
         # Leave the current group.
-        while type(scopes[-1]) != type(Group) and not scopes[-1].is_root:
+        while type(scopes[-1]).__name__ != Group.__name__ and not scopes[-1].is_root:
             scopes.pop()
         if not scopes[-1].is_root:
             scopes.pop()

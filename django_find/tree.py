@@ -7,6 +7,14 @@ class Node(object):
         self.is_root = is_root
         self.children = list(children) if children else []
 
+    @classmethod
+    def precedence(self):
+        return 0
+
+    @classmethod
+    def is_logical(self):
+        return False
+
     def add(self, child):
         self.children.append(child)
         return child
