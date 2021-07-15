@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'django-find'
-copyright = u'2018, Samuel Abels'
+project = 'django-find'
+copyright = '2018, Samuel Abels'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -194,8 +194,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'django-find.tex', u'django-find Documentation',
-   u'Samuel Abels', 'manual'),
+  ('index', 'django-find.tex', 'django-find Documentation',
+   'Samuel Abels', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -224,8 +224,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'django-find', u'django-find Documentation',
-     [u'Samuel Abels'], 1)
+    ('index', 'django-find', 'django-find Documentation',
+     ['Samuel Abels'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -238,8 +238,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'django-find', u'django-find Documentation',
-   u'Samuel Abels', 'django-find', 'Query your models using human-friendly query language',
+  ('index', 'django-find', 'django-find Documentation',
+   'Samuel Abels', 'django-find', 'Query your models using human-friendly query language',
    'Miscellaneous'),
 ]
 
@@ -256,10 +256,10 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'django-find'
-epub_author = u'Samuel Abels'
-epub_publisher = u'Samuel Abels'
-epub_copyright = u'2018, Samuel Abels'
+epub_title = 'django-find'
+epub_author = 'Samuel Abels'
+epub_publisher = 'Samuel Abels'
+epub_copyright = '2018, Samuel Abels'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.template import Template, Context

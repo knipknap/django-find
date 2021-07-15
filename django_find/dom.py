@@ -1,17 +1,18 @@
-from __future__ import absolute_import, print_function
 from builtins import str
 from .tree import Node
 
-operators = ['contains',
-             'equals',
-             'startswith',
-             'endswith',
-             'regex',
-             'gt',
-             'gte',
-             'lt',
-             'lte',
-             'any']
+operators = [
+    'contains',
+    'equals',
+    'startswith',
+    'endswith',
+    'regex',
+    'gt',
+    'gte',
+    'lt',
+    'lte',
+    'any'
+]
 
 class Group(Node):
     def translate_term_names(self, name_map):

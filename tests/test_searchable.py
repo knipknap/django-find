@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from django.test import TestCase
 from django_find.handlers import LowerCaseStrFieldHandler, IntegerFieldHandler
 from .models import Author, DerivedAuthor, SecondAuthor, Book, Chapter, \

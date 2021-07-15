@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+
 from django import template
 from django.template.loader import render_to_string
 

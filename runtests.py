@@ -44,6 +44,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.contrib.messages.context_processors.messages',
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.i18n',
                 'django.template.context_processors.request',
@@ -58,7 +59,7 @@ settings.configure(
     TEMPLATE_DEBUG=False,
     ALLOWED_HOSTS=[],
     INSTALLED_APPS=ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS,
-    MIDDLEWARE_CLASSES=ALWAYS_MIDDLEWARE_CLASSES,
+    MIDDLEWARE=ALWAYS_MIDDLEWARE_CLASSES,
     TEMPLATES=TEMPLATES,
     ROOT_URLCONF='tests.urls',
     DATABASES={

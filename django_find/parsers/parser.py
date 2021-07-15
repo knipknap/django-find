@@ -1,4 +1,3 @@
-
 class Parser(object):
     """
     The base class for all parsers.

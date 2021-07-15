@@ -1,5 +1,6 @@
-from __future__ import absolute_import, print_function
 import re
+from ..refs import get_subclasses
+from django_find import models
 from collections import OrderedDict
 from .parser import Parser
 from ..dom import Group, And, Or, Not, Term
@@ -18,17 +19,19 @@ operators = OrderedDict((
     ('=', 'equals'),
 ))
 
-operators_str = '|'.join(operators.keys())
-tokens = [('and', re.compile(r'and\b', re.I)),
-          ('or', re.compile(r'or\b', re.I)),
-          ('not', re.compile(r'not\b', re.I)),
-          ('openbracket', re.compile(r'\(')),
-          ('closebracket', re.compile(r'\)')),
-          ('whitespace', re.compile(r'\s+')),
-          ('field', re.compile(r'([\w\-]+)({})'.format(operators_str))),
-          ('word', re.compile(r'"([^"]*)"')),
-          ('word', re.compile(r'([^"\s\\\'\)]+)')),
-          ('unknown', re.compile(r'.'))]
+operators_str = '|'.join(list(operators.keys()))
+tokens = [
+    ('and', re.compile(r'and\b', re.I)),
+    ('or', re.compile(r'or\b', re.I)),
+    ('not', re.compile(r'not\b', re.I)),
+    ('openbracket', re.compile(r'\(')),
+    ('closebracket', re.compile(r'\)')),
+    ('whitespace', re.compile(r'\s+')),
+    ('field', re.compile(r'([\w\-]+)({})'.format(operators_str))),
+    ('word', re.compile(r'"([^"]*)"')),
+    ('word', re.compile(r'([^"\s\\\'\)]+)')),
+    ('unknown', re.compile(r'.'))
+]
 
 def open_scope(scopes, scope):
     scopes.append(scopes[-1].add(scope))
@@ -98,6 +101,15 @@ class QueryParser(Parser):
         except IndexError:
             return
 
+        for subclass in get_subclasses(models.Searchable):
+            try:
+                for k, v in subclass._meta.get_field(field_name).choices:
+                    if value == v:
+                        value = k
+                        break
+            except:
+                continue
+
         term = get_term_from_op(field, op, value)
         scopes[-1].add(term)
         close_scope(scopes)
@@ -136,9 +148,6 @@ class QueryParser(Parser):
         # Auto-leave the parent scope (if necessary).
         close_scope(scopes)
 
-    def parse_whitespace(self, scopes, match):
-        pass
-
     def parse(self, query):
         self._reset()
         self.input = query.strip()
@@ -147,8 +156,12 @@ class QueryParser(Parser):
         token, match = self._get_next_token()
 
         while token != 'EOF':
-            parse_func = getattr(self, 'parse_'+token)
-            parse_func(scopes, match)
-            token, match = self._get_next_token()
+            try:
+                parse_func = getattr(self, 'parse_'+token)
+                parse_func(scopes, match)
+            except AttributeError:
+                pass
+            finally:
+                token, match = self._get_next_token()
 
         return result.optimize()

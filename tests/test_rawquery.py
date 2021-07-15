@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from django.test import TestCase
 from django_find.rawquery import PaginatedRawQuerySet
 from .models import Author

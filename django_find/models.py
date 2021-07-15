@@ -2,8 +2,8 @@
 This module contains the Searchable mixin, the main public API of
 django-find.
 """
-from __future__ import absolute_import, print_function
 from collections import OrderedDict
+from django.apps import AppConfig
 from django.db import models
 from .parsers.query import QueryParser
 from .parsers.json import JSONParser
@@ -114,7 +114,7 @@ class Searchable(object):
         model = cls
         while '__' in selector:
             model_name, selector = selector.split('__', 1)
-            model = model._meta.get_field(model_name).rel.to
+            model = model._meta.get_field(model_name).remote_field.model
 
         return model, model._meta.get_field(selector)
 

@@ -47,14 +47,14 @@ def parent_classes(cls):
     parents = []
     for field in cls._meta.get_fields():
         if isinstance(field, (models.ForeignKey, models.ManyToManyField)):
-            parents.append(field.rel.to)
+            parents.append(field.remote_field.model)
     return parents
 
 def get_field_to(cls, target_cls):
     for field in cls._meta.get_fields():
         if not isinstance(field, (models.ForeignKey, models.ManyToManyField)):
             continue
-        if field.rel.to is target_cls:
+        if field.remote_field.model is target_cls:
             return field
     return None
 

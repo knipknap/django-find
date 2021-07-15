@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
 from builtins import str
 from collections import defaultdict, OrderedDict
 from MySQLdb import escape_string
@@ -6,19 +5,25 @@ from ..refs import get_join_for
 from .serializer import Serializer
 from .util import parse_date, parse_datetime
 
-int_op_map = {'equals': 'equals',
-              'contains': 'equals',
-              'startswith': 'gte',
-              'endswith': 'lte'}
+int_op_map = {
+    'equals': 'equals',
+    'contains': 'equals',
+    'startswith': 'gte',
+    'endswith': 'lte'
+}
 
-str_op_map = {'gt': 'startswith',
-              'gte': 'startswith',
-              'lt': 'endswith',
-              'lte': 'endswith'}
+str_op_map = {
+    'gt': 'startswith',
+    'gte': 'startswith',
+    'lt': 'endswith',
+    'lte': 'endswith'
+}
 
-date_op_map = {'contains': 'equals',
-               'startswith': 'gte',
-               'endswith': 'lte'}
+date_op_map = {
+    'contains': 'equals',
+    'startswith': 'gte',
+    'endswith': 'lte'
+}
 
 operator_map = {
     'equals': "='{}'",
@@ -30,7 +35,8 @@ operator_map = {
     'startswith': " LIKE '{}%%'",
     'endswith': " LIKE '%%{}'",
     'contains': " LIKE '%%{}%%'",
-    'regex': " REGEXP '%%{}%%'"}
+    'regex': " REGEXP '%%{}%%'"
+}
 
 def _mkcol(tbl, name, alias):
     return tbl+'.'+name+' '+tbl+'_'+alias

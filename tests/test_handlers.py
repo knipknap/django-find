@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from copy import copy
 from django.test import TestCase
 from django_find.handlers import type_registry, LowerCaseStrFieldHandler
