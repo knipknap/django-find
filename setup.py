@@ -36,7 +36,7 @@ setup(
     author='Samuel Abels',
     author_email='knipknap@gmail.com',
     install_requires=['future',
-                      'Django>=1.11,<2',
+                      'Django>=1.11,<=3.2',
                       'mysqlclient',
                       'dateparser'],
     keywords=' '.join(['django',
