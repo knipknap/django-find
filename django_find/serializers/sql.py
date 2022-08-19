@@ -1,6 +1,6 @@
 from builtins import str
 from collections import defaultdict, OrderedDict
-from MySQLdb import escape_string
+from MySQLdb import _mysql import escape_string
 from ..refs import get_join_for
 from .serializer import Serializer
 from .util import parse_date, parse_datetime
