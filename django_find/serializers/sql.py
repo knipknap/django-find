@@ -1,6 +1,5 @@
 from builtins import str
 from collections import defaultdict, OrderedDict
-from MySQLdb._mysql import escape_string
 from ..refs import get_join_for
 from .serializer import Serializer
 from .util import parse_date, parse_datetime
@@ -52,7 +51,7 @@ def _mk_condition(db_column, operator, data):
     # without already executing it, e.g. django.db.connection.execute())
     if isinstance(data, int):
         return db_column+op.format(data)
-    return db_column+op.format(escape_string(data).decode('utf-8'))
+    return db_column+op.format(data.decode('utf-8'))
 
 class SQLSerializer(Serializer):
     def __init__(self, model, mode='SELECT', fullnames=None, extra_model=None):
