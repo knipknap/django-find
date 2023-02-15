@@ -51,7 +51,7 @@ class Searchable(object):
         for handler in type_registry:
             if handler.handles(cls, field):
                 return handler
-        msg = 'field {}.{} is of type {}'.format(cls.__name__,
+        msg = 'field {}.{} is of type {}'.format(cls.get_classname(),
                                                  field.name,
                                                  type(field))
         raise TypeError(msg + ', which has no field handler. Consider adding a '
@@ -66,6 +66,13 @@ class Searchable(object):
         fields that can be used in a query.
         """
         return list(OrderedDict(cls.get_searchable()).keys())
+    
+    @classmethod
+    def get_classname(cls):
+        """
+        Returns a string for the classes name including the modules path.
+        """
+        return "{}.{}".format(cls.__module__, cls.__name__)
 
     @classmethod
     def get_fullnames(cls, unique=False):
@@ -81,11 +88,11 @@ class Searchable(object):
                 if selector in selectors:
                     continue
                 selectors.add(selector)
-                result.append(cls.__name__+'.'+item[0])
+                result.append(cls.get_classname()+'.'+item[0])
             return result
         else:
             aliases = cls.get_aliases()
-            return [cls.__name__+'.'+alias for alias in aliases]
+            return [cls.get_classname()+'.'+alias for alias in aliases]
 
     @classmethod
     def table_headers(cls):
@@ -183,7 +190,7 @@ class Searchable(object):
             if subclass.__module__ == '__fake__':
                 # Skip Django-internal models
                 continue
-            if subclass.__name__ == clsname:
+            if subclass.get_classname() == clsname:
                 thecls = subclass
                 break
         if thecls is None:
@@ -222,7 +229,7 @@ class Searchable(object):
         path = path_list[0]
         prefix = ''
         for thecls in path[1:]:
-            prefix += thecls.__name__.lower() + '__'
+            prefix += thecls.get_classname().lower() + '__'
             if thecls == target_cls:
                 return prefix+selector
 
@@ -249,7 +256,7 @@ class Searchable(object):
             aliases = cls.get_aliases()
         fields = {}
         for alias in aliases:
-            fields[alias] = cls.__name__+'.'+alias
+            fields[alias] = cls.get_classname()+'.'+alias
         query_parser = QueryParser(fields, aliases)
         return query_parser.parse(query)
 
