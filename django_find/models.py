@@ -184,7 +184,9 @@ class Searchable(object):
             raise AttributeError('class name is required, format should be "Class.alias"')
 
         # Search the class.
-        clsname, alias = fullname.split('.', 1)
+        names = fullname.split('.')
+        clsname = ".".join(names[:-1])
+        alias = names[-1]
         thecls = None
         for subclass in get_subclasses(Searchable):
             if subclass.__module__ == '__fake__':
