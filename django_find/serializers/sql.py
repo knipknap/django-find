@@ -51,7 +51,9 @@ def _mk_condition(db_column, operator, data):
     # without already executing it, e.g. django.db.connection.execute())
     if isinstance(data, int):
         return db_column+op.format(data)
-    return db_column+op.format(data.decode('utf-8'))
+    elif isinstance(data, bytes):
+        data = data.decode('utf-8')
+    return db_column+op.format(data)
 
 class SQLSerializer(Serializer):
     def __init__(self, model, mode='SELECT', fullnames=None, extra_model=None):
