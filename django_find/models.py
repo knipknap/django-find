@@ -192,7 +192,9 @@ class Searchable(object):
             if subclass.__module__ == '__fake__':
                 # Skip Django-internal models
                 continue
-            if subclass.get_classname() == clsname:
+            subclsname = subclass.get_classname()
+            subclsshort = subclsname.split('.')[-1]
+            if clsname in [subclsname, subclsshort]:
                 thecls = subclass
                 break
         if thecls is None:
