@@ -16,10 +16,11 @@ class SearchableTest(TestCase):
         self.assertEqual(expected, Book.get_aliases())
 
     def testGetFullNames(self):
-        expected = ['Author.name', 'Author.rating', 'Author.author', 'Author.writer']
+        expected = ['search_tests.Author.name', 'search_tests.Author.rating',
+                    'search_tests.Author.author', 'search_tests.Author.writer']
         self.assertEqual(expected, Author.get_fullnames())
 
-        expected = ['Author.name', 'Author.rating']
+        expected = ['search_tests.Author.name', 'search_tests.Author.rating']
         self.assertEqual(expected, Author.get_fullnames(True))
 
 
@@ -55,7 +56,7 @@ class SearchableTest(TestCase):
     def testGetFieldHandlerFromFullname(self):
         func = Author.get_field_handler_from_fullname
         self.assertRaises(AttributeError, func, 'foo')
-        self.assertEqual(func('Author.name'), LowerCaseStrFieldHandler)
+        self.assertEqual(func('search_tests.Author.name'), LowerCaseStrFieldHandler)
         self.assertEqual(func('Book.author'), LowerCaseStrFieldHandler)
         self.assertEqual(func('Book.rating'), IntegerFieldHandler)
 
@@ -70,9 +71,9 @@ class SearchableTest(TestCase):
         func = Author.get_class_from_fullname
         self.assertRaises(KeyError, func, 'no.foo')
         self.assertRaises(AttributeError, func, 'name')
-        self.assertEqual(func('Author.name'), (Author, 'name'))
-        self.assertEqual(func('Author.author'), (Author, 'author'))
-        self.assertEqual(func('Author.rating'), (Author, 'rating'))
+        self.assertEqual(func('search_tests.Author.name'), (Author, 'name'))
+        self.assertEqual(func('search_tests.Author.author'), (Author, 'author'))
+        self.assertEqual(func('search_tests.Author.rating'), (Author, 'rating'))
         self.assertEqual(func('Book.name'), (Book, 'name'))
         self.assertEqual(func('Book.author'), (Book, 'author'))
         self.assertEqual(func('Book.rating'), (Book, 'rating'))
@@ -105,7 +106,7 @@ class SearchableTest(TestCase):
         query, fields = SimpleModel.by_query_raw('testme AND comment:foo')
         self.assertTrue('WHERE ' in query.raw_query)
         self.assertTrue('%testme%' in query.raw_query)
-        self.failIf('SimpleModel' in query.raw_query)
+        self.assertFalse('SimpleModel' in query.raw_query)
         self.assertEqual(['SimpleModel.title',
                           'SimpleModel.comment',
                           'SimpleModel.yesno'], fields)
@@ -113,13 +114,14 @@ class SearchableTest(TestCase):
         query, fields = Author.by_query_raw('testme AND name:foo')
         self.assertTrue('WHERE ' in query.raw_query)
         self.assertTrue('%testme%' in query.raw_query)
-        self.failIf('Author' in query.raw_query)
-        self.failIf('Book' in query.raw_query)
-        self.assertEqual(['Author.name', 'Author.rating', 'Author.author', 'Author.writer'], fields)
+        self.assertFalse('search_tests.Author' in query.raw_query)
+        self.assertFalse('Book' in query.raw_query)
+        self.assertEqual(['search_tests.Author.name', 'search_tests.Author.rating',
+                          'search_tests.Author.author', 'search_tests.Author.writer'], fields)
 
         query, fields = Book.by_query_raw('rating:5')
         self.assertTrue('WHERE ' in query.raw_query)
         self.assertTrue('5' in query.raw_query)
-        self.failIf('Author' in query.raw_query)
-        self.failIf('Book' in query.raw_query)
+        self.assertFalse('Author' in query.raw_query)
+        self.assertFalse('Book' in query.raw_query)
         self.assertEqual(['Book.rating'], fields)

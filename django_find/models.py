@@ -70,9 +70,23 @@ class Searchable(object):
     @classmethod
     def get_classname(cls):
         """
-        Returns a string for the classes name including the modules path.
+        Returns the class name used to build fullnames and Django selectors.
+
+        When the short class name is unique among all Searchable
+        subclasses the bare name is returned (e.g. ``"Book"``).
+        When another Searchable model has the same ``__name__``
+        (different app), the Django app label is prepended to
+        disambiguate (e.g. ``"myapp.Author"``), matching the format
+        accepted by :meth:`get_class_from_fullname`.
         """
-        return "{}.{}".format(cls.__module__, cls.__name__)
+        short = cls.__name__
+        # Check if any *other* Searchable subclass shares our __name__.
+        for sub in get_subclasses(Searchable):
+            if sub is cls or sub.__module__ == '__fake__':
+                continue
+            if sub.__name__ == short:
+                return cls._meta.label   # e.g. "search_tests.Author"
+        return short
 
     @classmethod
     def get_fullnames(cls, unique=False):
@@ -174,33 +188,69 @@ class Searchable(object):
     @classmethod
     def get_class_from_fullname(cls, fullname):
         """
-        Given a name in the format "Model.hostname", this
-        function returns a tuple, where the first element is the Model
-        class, and the second is the field name "hostname".
+        Given a name in the format "Model.field" or "app_label.Model.field",
+        this function returns a tuple ``(ModelClass, alias)``.
 
-        The Model class must inherit from Searchable to be found.
+        The short form ``Author.name`` works when only one Searchable
+        subclass is named *Author*.  When two apps define a model with
+        the same class name, use the qualified form
+        ``app_label.Author.name``  (the ``app_label`` comes from
+        ``Model._meta.label``, e.g. ``myapp.Author``).
+
+        When ``cls`` (the model the method is called on) can narrow down
+        the ambiguity — because exactly one match shares the same
+        ``app_label`` — that match is preferred automatically.  This
+        lets serializers resolve short names produced by the JSON parser
+        without requiring every caller to pass qualified names.
         """
         if '.' not in fullname:
-            raise AttributeError('class name is required, format should be "Class.alias"')
+            raise AttributeError(
+                'class name is required, format should be '
+                '"Class.alias" or "app_label.Class.alias"'
+            )
 
-        # Search the class.
+        # Split into class identifier and field alias.
         names = fullname.split('.')
-        clsname = ".".join(names[:-1])
+        clsname = ".".join(names[:-1])  # e.g. "Author" or "myapp.Author"
         alias = names[-1]
-        thecls = None
-        for subclass in get_subclasses(Searchable):
-            if subclass.__module__ == '__fake__':
-                # Skip Django-internal models
-                continue
-            subclsname = subclass.get_classname()
-            subclsshort = subclsname.split('.')[-1]
-            if clsname in [subclsname, subclsshort]:
-                thecls = subclass
-                break
-        if thecls is None:
-            raise KeyError('no such class: ', clsname)
 
-        return subclass, alias
+        # Collect all Searchable subclasses, skipping Django internals.
+        candidates = [
+            sub for sub in get_subclasses(Searchable)
+            if sub.__module__ != '__fake__'
+        ]
+
+        # First, try an exact match against the Django app label
+        # (e.g. "myapp.Author" == Model._meta.label).  This is the
+        # unambiguous, qualified form.
+        for sub in candidates:
+            if sub._meta.label == clsname:
+                return sub, alias
+
+        # Fall back to matching the short class name.
+        matches = [sub for sub in candidates if sub.__name__ == clsname]
+        if len(matches) == 1:
+            return matches[0], alias
+        if len(matches) > 1:
+            # Try to disambiguate using the calling class's app_label.
+            # When a serializer calls  cls.get_class_from_fullname(name),
+            # cls is the "root" model of the query — models in the same
+            # app are almost certainly the intended targets.
+            same_app = [
+                m for m in matches
+                if m._meta.app_label == cls._meta.app_label
+            ]
+            if len(same_app) == 1:
+                return same_app[0], alias
+
+            labels = ', '.join(sorted(m._meta.label for m in matches))
+            raise KeyError(
+                f'Ambiguous class name "{clsname}" matches multiple '
+                f'models: {labels}. Use the qualified form '
+                f'"app_label.{clsname}.{alias}" to disambiguate.'
+            )
+
+        raise KeyError('no such class: ', clsname)
 
     @classmethod
     def get_selector_from_fullname(cls, fullname):
@@ -233,7 +283,7 @@ class Searchable(object):
         path = path_list[0]
         prefix = ''
         for thecls in path[1:]:
-            prefix += thecls.get_classname().lower() + '__'
+            prefix += thecls._meta.model_name + '__'
             if thecls == target_cls:
                 return prefix+selector
 

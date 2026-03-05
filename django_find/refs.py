@@ -3,6 +3,21 @@ from itertools import chain
 from django.db import models
 from django.db.models.fields.related import ManyToOneRel, ManyToManyRel
 
+
+def _get_joining_columns(field, reverse=False):
+    """Compatibility shim for Django <5.0 through 6.0+.
+
+    Django 5.0 deprecated get_joining_columns() in favour of
+    get_joining_fields() which returns field objects instead of column
+    name strings.  Django 6.0 removed the old method entirely.
+    """
+    if hasattr(field, "get_joining_fields"):
+        pairs = field.get_joining_fields(reverse_join=reverse)
+        return tuple((lhs.column, rhs.column) for lhs, rhs in pairs)
+    if reverse:
+        return field.get_reverse_joining_columns()
+    return field.get_joining_columns()
+
 def get_subclasses(cls):
     """
     Recursively finds all subclasses of the current class.
@@ -161,7 +176,7 @@ def _through2class_columns(through_model, target_cls):
     # From through-table to target class.
     through_table = through_model._meta.db_table
     from_field = get_field_to(through_model, target_cls)
-    through_join = from_field.get_reverse_joining_columns()
+    through_join = _get_joining_columns(from_field, reverse=True)
     left, right = through_join[0]
     right = through_table+'.'+right
     return left, right
@@ -184,7 +199,7 @@ def _get_join_data(last_cls, to_cls):
             result.append(_class2through_columns(last_cls, through_model))
             left, right = _through2class_columns(through_model, to_cls)
         else:
-            left, right = field.get_reverse_joining_columns()[0]
+            left, right = _get_joining_columns(field, reverse=True)[0]
             right = last_table_name+'.'+right
 
     else:
@@ -197,7 +212,7 @@ def _get_join_data(last_cls, to_cls):
             result.append(_class2through_columns(last_cls, through_model))
             left, right = _through2class_columns(through_model, to_cls)
         else:
-            left, right = field.get_joining_columns()[0]
+            left, right = _get_joining_columns(field)[0]
             right = last_table_name+'.'+right
 
     table_name = to_cls._meta.db_table
