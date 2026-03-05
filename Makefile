@@ -1,8 +1,4 @@
 NAME=django_find
-VERSION=`python setup.py --version | sed s/^v//`
-PREFIX=/usr/local/
-BIN_DIR=$(PREFIX)/bin
-SITE_DIR=$(PREFIX)`python -c "from __future__ import print_function; import sys; from distutils.sysconfig import get_python_lib; print(get_python_lib()[len(sys.prefix):])"`
 
 ###################################################################
 # Standard targets.
@@ -10,63 +6,27 @@ SITE_DIR=$(PREFIX)`python -c "from __future__ import print_function; import sys;
 .PHONY : clean
 clean:
 	find . -name "*.pyc" -o -name "*.pyo" | xargs -n1 rm -f
-	rm -Rf build *.egg-info
-	cd docs; make clean
-
-.PHONY : dist-clean
-dist-clean: clean
-	rm -Rf dist
-
-.PHONY : doc
-doc:
-	cd doc; make
-
-install:
-	mkdir -p $(SITE_DIR)
-	./version.sh
-	export PYTHONPATH=$(SITE_DIR):$(PYTHONPATH); \
-	python setup.py install --prefix $(PREFIX) \
-	                        --install-scripts $(BIN_DIR) \
-	                        --install-lib $(SITE_DIR)
-	./version.sh --reset
-
-uninstall:
-	# Sorry, Python's distutils support no such action yet.
+	rm -Rf build dist *.egg-info .nox htmlcov .coverage
 
 .PHONY : tests
 tests:
-	./runtests.py
+	DJANGO_SETTINGS_MODULE=tests.settings python -m pytest tests/ --verbosity=2
+
+.PHONY : test-matrix
+test-matrix:
+	uvx nox
+
+.PHONY : coverage
+coverage:
+	uvx nox -s coverage
 
 ###################################################################
 # Package builders.
 ###################################################################
-targz: clean
-	./version.sh
-	python setup.py sdist --formats gztar
-	./version.sh --reset
+.PHONY : build
+build: clean
+	uvx --from build pyproject-build --installer uv
 
-tarbz: clean
-	./version.sh
-	python setup.py sdist --formats bztar
-	./version.sh --reset
-
-wheel: clean
-	./version.sh
-	python setup.py bdist_wheel --universal
-	./version.sh --reset
-
-deb: clean
-	./version.sh
-	debuild -S -sa
-	cd ..; sudo pbuilder build $(NAME)_$(VERSION)-0ubuntu1.dsc; cd -
-	./version.sh --reset
-
-dist: targz tarbz wheel
-
-###################################################################
-# Publishers.
-###################################################################
-dist-publish:
-	./version.sh
-	twine upload dist/*
-	./version.sh --reset
+.PHONY : publish
+publish: build
+	uvx twine upload dist/*

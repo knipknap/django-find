@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-find"
+dynamic = ["version"]
+description = "Simple but powerful search/filter functionality for Django projects"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Samuel Abels", email = "knipknap@gmail.com" },
+]
+keywords = ["django", "search", "find", "filter", "query", "json", "sql"]
+classifiers = [
+    "Environment :: Web Environment",
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Text Processing :: Filters",
+]
+dependencies = [
+    "Django>=4.2",
+    "dateparser",
+]
+
+[project.urls]
+Homepage = "https://github.com/knipknap/django-find"
+Repository = "https://github.com/knipknap/django-find"
+Issues = "https://github.com/knipknap/django-find/issues"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/django_find",
+    "/LICENSE",
+    "/README.md",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["django_find"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+
+[tool.coverage.run]
+source = ["django_find"]
+omit = ["django_find/urls.py"]
