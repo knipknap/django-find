@@ -132,8 +132,44 @@ class QueryParser(Parser):
     def parse_or(self, scopes, match):
         self.parse_boolean(scopes, Or, match)
 
+    def parse_term(self, token, scopes, match):
+        try:
+            parse_func = getattr(self, 'parse_'+token)
+            parse_func(scopes, match)
+        except AttributeError:
+            pass
+
+    def add_logical_scope(self, scopes, match):
+        """
+        Parses a logical scope within a query.
+        A logical scope is required to handle 'not' statements that are at the root scope level.
+        This method processes tokens within the scope, handling open and close brackets,
+        whitespace, and words appropriately.
+        Args:
+            scopes (list): The list of current scopes being processed.
+            match (re.Match): The current match object from the regular expression.
+        Returns:
+            None
+        """
+        self.parse_openbracket(scopes, match)
+        stop_on_whitespace = False
+        while True:
+            token, match = self._get_next_token()
+            if token == 'EOF':
+                break
+            elif token == 'whitespace':
+                if stop_on_whitespace:
+                    break
+                else:
+                    continue
+            elif token == 'word':
+                stop_on_whitespace = True
+            self.parse_term(token, scopes, match)
+        self.parse_closebracket(scopes, match)
+
     def parse_not(self, scopes, match):
         open_scope(scopes, Not())
+        self.add_logical_scope(scopes, match)
 
     def parse_openbracket(self, scopes, match):
         open_scope(scopes, Group())
@@ -156,12 +192,7 @@ class QueryParser(Parser):
         token, match = self._get_next_token()
 
         while token != 'EOF':
-            try:
-                parse_func = getattr(self, 'parse_'+token)
-                parse_func(scopes, match)
-            except AttributeError:
-                pass
-            finally:
-                token, match = self._get_next_token()
+            self.parse_term(token, scopes, match)
+            token, match = self._get_next_token()
 
         return result.optimize()

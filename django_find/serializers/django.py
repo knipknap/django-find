@@ -39,6 +39,8 @@ class DjangoSerializer(Serializer):
         return ~self.logical_and(terms)
 
     def boolean_term(self, selector, operator, data):
+        if data.lower() not in ['true', 'false']:
+            return ~Q()
         value = data.lower() == 'true'
         return Q(**{selector: value})
 
