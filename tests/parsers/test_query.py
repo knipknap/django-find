@@ -35,7 +35,25 @@ expected_dom3 = """Group(root)
   Term: Device.metadata_id lte 'g'
   Not
     Term: Device.metadata_id equals 'no'"""
+# The 'not' keyword has the highest precedence: it binds only to the next
+# single term, even without brackets, so the terms that follow are siblings.
+query4 = 'host:a and not model:b and interface:c'
+expected_dom4 = """Group(root)
+  And
+    Term: Device.metadata_id contains 'a'
+    Not
+      Term: Device.model contains 'b'
+    Term: Unit.interface contains 'c'"""
 
+# When the operand is parenthesized, 'not' binds to the whole group only.
+query5 = 'not (model:b or interface:c) and host:a'
+expected_dom5 = """Group(root)
+  And
+    Not
+      Or
+        Term: Device.model contains 'b'
+        Term: Unit.interface contains 'c'
+    Term: Device.metadata_id contains 'a'"""
 class QueryParserTest(TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -54,3 +72,9 @@ class QueryParserTest(TestCase):
 
         dom = self.parser.parse(query3)
         self.assertEqual(expected_dom3, dom.dump())
+
+        dom = self.parser.parse(query4)
+        self.assertEqual(expected_dom4, dom.dump())
+
+        dom = self.parser.parse(query5)
+        self.assertEqual(expected_dom5, dom.dump())

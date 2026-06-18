@@ -141,30 +141,40 @@ class QueryParser(Parser):
 
     def add_logical_scope(self, scopes, match):
         """
-        Parses a logical scope within a query.
-        A logical scope is required to handle 'not' statements that are at the root scope level.
-        This method processes tokens within the scope, handling open and close brackets,
-        whitespace, and words appropriately.
-        Args:
-            scopes (list): The list of current scopes being processed.
-            match (re.Match): The current match object from the regular expression.
-        Returns:
-            None
+        Reads exactly one operand that follows a 'not' keyword into the
+        current scope. The operand is either a single term ('word' or
+        'field:value') or a parenthesized group.
+
+        Binding 'not' to a single operand (instead of greedily consuming the
+        rest of the expression) is what gives 'not' the highest precedence:
+        it binds tighter than 'and' and 'or' without requiring brackets, so
+        e.g. "a and not b and c" is parsed as "a and (not b) and c".
         """
         self.parse_openbracket(scopes, match)
-        stop_on_whitespace = False
-        while True:
+
+        # Skip any whitespace between 'not' and its operand.
+        token, match = self._get_next_token()
+        while token == 'whitespace':
             token, match = self._get_next_token()
-            if token == 'EOF':
-                break
-            elif token == 'whitespace':
-                if stop_on_whitespace:
-                    break
-                else:
-                    continue
-            elif token == 'word':
-                stop_on_whitespace = True
+
+        if token == 'openbracket':
+            # The operand is a parenthesized group: consume tokens until the
+            # matching closing bracket, honouring nested brackets.
+            depth = 1
             self.parse_term(token, scopes, match)
+            while depth > 0:
+                token, match = self._get_next_token()
+                if token == 'EOF':
+                    break
+                if token == 'openbracket':
+                    depth += 1
+                elif token == 'closebracket':
+                    depth -= 1
+                self.parse_term(token, scopes, match)
+        elif token != 'EOF':
+            # The operand is a single term (a 'word' or a 'field:value' pair).
+            self.parse_term(token, scopes, match)
+
         self.parse_closebracket(scopes, match)
 
     def parse_not(self, scopes, match):
