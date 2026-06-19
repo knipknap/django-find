@@ -142,6 +142,42 @@ def sort_vectors_by_primary_cls(vectors, primary_cls):
         return float('{}.{}'.format(pos, len(vector)))
     return sorted(vectors, key=sort_by_length_and_pos_of_primary_cls)
 
+def relation_is_lossy(from_cls, to_cls):
+    """
+    Returns True if joining from ``from_cls`` to ``to_cls`` may introduce NULL
+    values, i.e. the relation is optional.
+
+    A join is lossy when it traverses:
+
+    - a nullable forward ``ForeignKey``/``OneToOneField`` (the referenced row
+      may be absent), or
+    - a ``ManyToManyField`` (there may be zero related rows), or
+    - a reverse relation, where ``to_cls`` holds the foreign key pointing back
+      to ``from_cls`` (a ``from_cls`` row may have no matching ``to_cls`` row).
+
+    A non-null forward ``ForeignKey`` or ``OneToOneField`` is lossless, because
+    the referenced row is guaranteed to exist.
+    """
+    field = get_field_to(from_cls, to_cls)
+    if field is None:
+        # Reverse relation: to_cls references from_cls, so a from_cls row may
+        # have no match on the other side of the (LEFT) join.
+        return True
+    if isinstance(field, models.ManyToManyField):
+        return True
+    return bool(field.null)
+
+def count_lossy_edges(vector):
+    """
+    Returns the number of optional relations traversed by the given vector.
+
+    A vector with zero lossy edges never nulls out the joined columns, which
+    makes it the safest choice when several equally short join paths exist
+    (see get_object_vector_for()).
+    """
+    return sum(relation_is_lossy(vector[pos], thecls)
+               for pos, thecls in enumerate(vector[1:]))
+
 def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
     """
     Like get_object_vector_to(), but returns a single vector that reaches
@@ -153,10 +189,30 @@ def get_object_vector_for(cls, search_cls_list, subtype, avoid=None):
     if not matching:
         return None # No vector contains all classes
 
-    # Prefer the path where the classes appear in the same order as in
-    # search_cls_list.
+    # Order the candidates by, in decreasing priority:
+    #   1. the position of the primary class (keep the FROM clause anchored on
+    #      the first requested model),
+    #   2. the vector length (prefer the shortest join path),
+    #   3. the number of lossy edges (prefer a "lossless" path).
+    #
+    # Criterion 3 only breaks ties between paths that are otherwise equal (same
+    # primary-class position and length). When several join paths are equally
+    # short, django_find used to pick an arbitrary one; if that path traversed
+    # an optional relation (a nullable or reverse foreign key), the resulting
+    # LEFT JOIN nulled out the joined columns for rows without a match,
+    # silently dropping rows once a WHERE clause referenced those columns
+    # (TIPS-725). Preferring the lossless path makes the choice deterministic
+    # and correct without changing any path that was already unambiguous.
     primary_cls = search_cls_list[0]
-    matching = sort_vectors_by_primary_cls(matching, primary_cls)
+
+    def sort_key(vector):
+        try:
+            pos = vector.index(primary_cls)
+        except ValueError:
+            pos = 0
+        return pos, len(vector), count_lossy_edges(vector)
+
+    matching = sorted(matching, key=sort_key)
     for vector in matching:
         # Remove extra classes that are not explicitly requested.
         clean_vector = [c for c in vector if c in search_cls_list]

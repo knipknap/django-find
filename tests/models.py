@@ -76,3 +76,43 @@ class SimpleModel(models.Model, Searchable):
 
     class Meta:
         app_label = 'search_tests'
+
+# ---------------------------------------------------------------------------
+# Models that reproduce an ambiguous-join scenario.
+#
+# There are two equally short paths from Part to FarDevice:
+#
+#   Part -> Gadget -> FarDevice    (all non-null forward FKs: lossless)
+#   Part <- Alarm  -> FarDevice    (Alarm.part is an optional reverse
+#                                   relation, so this path is lossy)
+#
+# get_object_vector_for() must prefer the lossless Gadget path. Otherwise the
+# LEFT JOIN through Alarm nulls out the FarDevice columns for parts that have
+# no alarm, which silently drops those rows once a filter references the
+# FarDevice columns.
+# ---------------------------------------------------------------------------
+class FarDevice(models.Model, Searchable):
+    name = models.CharField(max_length=10)
+
+    class Meta:
+        app_label = 'search_tests'
+
+class Gadget(models.Model, Searchable):
+    device = models.ForeignKey(FarDevice, on_delete=models.CASCADE)
+
+    class Meta:
+        app_label = 'search_tests'
+
+class Part(models.Model, Searchable):
+    gadget = models.ForeignKey(Gadget, on_delete=models.CASCADE)
+    name = models.CharField(max_length=10)
+
+    class Meta:
+        app_label = 'search_tests'
+
+class Alarm(models.Model, Searchable):
+    part = models.ForeignKey(Part, null=True, on_delete=models.CASCADE)
+    device = models.ForeignKey(FarDevice, on_delete=models.CASCADE)
+
+    class Meta:
+        app_label = 'search_tests'
