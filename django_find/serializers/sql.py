@@ -187,15 +187,43 @@ class SQLSerializer(Serializer):
         thedatetime = parse_datetime(data)
         return self.date_datetime_common(db_column, operator, thedatetime)
 
+    def json_term(self, db_column, operator, data, json_path):
+        if json_path:
+            column = "JSON_EXTRACT({}, '$.{}')".format(db_column,
+                                                       json_path.replace('__', '.'))
+        else:
+            column = db_column
+        # Match the JSON document/value as a substring; this is portable
+        # across SQLite and MySQL (both store JSON as text and support LIKE).
+        return _mk_condition(column, 'contains', data)
+
+    @staticmethod
+    def _json_path_from_selector(selector, field):
+        parts = selector.split('__')
+        name = field.name
+        if name in parts:
+            index = parts.index(name)
+            return '__'.join(parts[index + 1:])
+        return ''
+
     def term(self, term_name, operator, data):
         if operator == 'any':
             return '1'
 
         model, alias = self.model.get_class_from_fullname(term_name)
         selector = model.get_selector_from_alias(alias)
+        if isinstance(selector, (list, tuple)):
+            raise NotImplementedError(
+                'multi-value alias "{}" is only supported by the Django query '
+                'backend, not the raw-SQL backend'.format(alias))
         target_model, field = model.get_field_from_selector(selector)
         db_column = target_model._meta.db_table + '.' + field.column
         handler = model.get_field_handler_from_alias(alias)
+
+        if handler.db_type == 'JSON':
+            json_path = self._json_path_from_selector(selector, field)
+            return self.json_term(db_column, operator,
+                                  handler.prepare(data), json_path)
 
         type_map = {'BOOL': self.boolean_term,
                     'INT': self.int_term,
@@ -206,5 +234,5 @@ class SQLSerializer(Serializer):
 
         func = type_map.get(handler.db_type)
         if not func:
-            raise TypeError('unsupported field type: '+repr(field_type))
+            raise TypeError('unsupported field type: '+repr(handler.db_type))
         return func(db_column, operator, handler.prepare(data))

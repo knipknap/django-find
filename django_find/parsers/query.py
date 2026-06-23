@@ -1,5 +1,5 @@
 import re
-from ..refs import get_subclasses
+from django.db.models import JSONField
 from django_find import models
 from collections import OrderedDict
 from .parser import Parser
@@ -90,29 +90,117 @@ class QueryParser(Parser):
         field_name = match.group(1).lower()
         field = self.fields.get(field_name)
         if field is None:
-            self.parse_word(scopes, match)
+            # The name may be a JSON key path, e.g. metadata__loan_id, where
+            # 'metadata' is a registered alias pointing at a JSONField.
+            json_name = self._json_path_fullname(field_name)
+            if json_name is None:
+                self.parse_word(scopes, match)
+                return
+            op = match.group(2)
+            token, value_match = self._get_next_token()
+            try:
+                value = value_match.group(1)
+            except (IndexError, AttributeError):
+                return
+            term = get_term_from_op(json_name, op, value)
+            scopes[-1].add(term)
+            close_scope(scopes)
             return
 
         # A field value is required.
         op = match.group(2)
-        token, match = self._get_next_token()
+        token, value_match = self._get_next_token()
         try:
-            value = match.group(1)
-        except IndexError:
+            value = value_match.group(1)
+        except (IndexError, AttributeError):
             return
 
-        for subclass in get_subclasses(models.Searchable):
-            try:
-                for k, v in subclass._meta.get_field(field_name).choices:
-                    if value == v:
-                        value = k
-                        break
-            except:
-                continue
+        # When the field has choices, let the user search by the human-readable
+        # display label, expanding to every matching stored value, e.g.
+        # format:edition -> (format=HC OR format=PB OR format=EB).
+        node = self._build_choice_node(field, op, value)
+        if node is not None:
+            scopes[-1].add(node)
+            close_scope(scopes)
+            return
 
         term = get_term_from_op(field, op, value)
         scopes[-1].add(term)
         close_scope(scopes)
+
+    @staticmethod
+    def _field_from_fullname(fullname):
+        """
+        Resolve a fullname (e.g. 'Copy.format') to its Django field, or
+        None when it cannot be resolved (e.g. the parser was built with a
+        synthetic name map that does not map to real Searchable models).
+        """
+        try:
+            cls, alias = models.Searchable.get_class_from_fullname(fullname)
+            return cls.get_field_from_alias(alias)
+        except Exception:
+            return None
+
+    def _json_path_fullname(self, field_name):
+        """
+        If field_name is '<base>__<path>' where <base> is a registered alias
+        pointing at a JSONField, return the fullname carrying the JSON path,
+        e.g. 'Copy.metadata__loan_id'. Otherwise return None.
+        """
+        if '__' not in field_name:
+            return None
+        base, path = field_name.split('__', 1)
+        base_fullname = self.fields.get(base)
+        if base_fullname is None:
+            return None
+        field = self._field_from_fullname(base_fullname)
+        if not isinstance(field, JSONField):
+            return None
+        return base_fullname + '__' + path
+
+    def _build_choice_node(self, fullname, operator, value):
+        """
+        For a choices field, expand a search by display label into an OR of
+        exact-match terms over the matching stored codes. Returns a DOM node
+        (Or, or Not(Or)), or None when no translation applies so the caller
+        falls back to the normal term.
+
+        ``:`` / ``!:`` (contains) match the label or code as a case-insensitive
+        substring; ``=`` / ``!=`` (equals) require a full case-insensitive
+        match of the label or code.
+        """
+        op = operators.get(operator)
+        if op not in ('contains', 'equals', 'notcontains', 'notequals'):
+            return None
+        field = self._field_from_fullname(fullname)
+        if field is None:
+            return None
+        choices = field.flatchoices or []
+        if not choices:
+            return None
+        needle = value.lower()
+        exact = op in ('equals', 'notequals')
+        codes = []
+        for code, label in choices:
+            code_s, label_s = str(code), str(label)
+            if exact:
+                matched = needle == code_s.lower() or needle == label_s.lower()
+            else:
+                matched = needle in code_s.lower() or needle in label_s.lower()
+            if matched:
+                codes.append(code_s)
+        if not codes:
+            # Nothing matched; fall back to the untranslated term, which yields
+            # no rows just like before (stored values are the codes).
+            return None
+        or_group = Or()
+        for code in codes:
+            or_group.add(Term(fullname, 'equals', code))
+        if op in ('notcontains', 'notequals'):
+            not_group = Not()
+            not_group.add(or_group)
+            return not_group
+        return or_group
 
     def parse_boolean(self, scopes, dom_cls, match):
         try:

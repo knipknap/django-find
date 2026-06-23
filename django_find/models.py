@@ -36,6 +36,8 @@ class Searchable(object):
 
     @classmethod
     def get_caption_from_selector(cls, selector):
+        if isinstance(selector, (list, tuple)):
+            selector = selector[0]
         caption = cls.searchable_labels.get(selector)
         if caption:
             return caption
@@ -95,13 +97,14 @@ class Searchable(object):
         name.
         """
         if unique:
-            selectors = set()
+            seen = set()
             result = []
             for item in cls.get_searchable():
                 selector = item[1]
-                if selector in selectors:
+                key = tuple(selector) if isinstance(selector, (list, tuple)) else selector
+                if key in seen:
                     continue
-                selectors.add(selector)
+                seen.add(key)
                 result.append(cls.get_classname()+'.'+item[0])
             return result
         else:
@@ -110,34 +113,63 @@ class Searchable(object):
 
     @classmethod
     def table_headers(cls):
-        selectors = set()
+        seen = set()
         result = []
         for item in cls.get_searchable():
             selector = item[1]
-            if selector in selectors:
+            key = tuple(selector) if isinstance(selector, (list, tuple)) else selector
+            if key in seen:
                 continue
-            selectors.add(selector)
+            seen.add(key)
             result.append(cls.get_caption_from_selector(selector))
         return result
 
     @classmethod
     def get_field_from_selector(cls, selector):
         """
-        Given a django selector, e.g. device__metadata__name, this returns the class
+        Given a django selector, e.g. author__name, this returns the class
         and the Django field of the model, as returned by Model._meta.get_field().
         Example::
 
-            device__metadata__name -> (SeedDevice, SeeDevice.name)
+            author__name              -> (Author, Author.name)
+            copies__metadata__loan_id -> (Copy, Copy.metadata)
+
+        Traversal stops early when a JSONField is reached, so the remainder
+        of the selector (a JSON key path, e.g. ``metadata__loan_id``) is treated
+        as a lookup into the JSON document rather than as a relation.
+        ``field.related_model`` is used to descend, which works for both
+        forward foreign keys and reverse relations.
         """
-        if not '__' in selector:
+        if '__' not in selector:
             return cls, cls._meta.get_field(selector)
 
         model = cls
-        while '__' in selector:
-            model_name, selector = selector.split('__', 1)
-            model = model._meta.get_field(model_name).remote_field.model
+        parts = selector.split('__')
+        for index, name in enumerate(parts):
+            field = model._meta.get_field(name)
+            if index == len(parts) - 1:
+                return model, field
+            if isinstance(field, models.JSONField):
+                return model, field
+            related_model = getattr(field, 'related_model', None)
+            if related_model is None:
+                return model, field
+            model = related_model
 
-        return model, model._meta.get_field(selector)
+        return model, model._meta.get_field(parts[-1])
+
+    @classmethod
+    def get_field_from_alias(cls, alias):
+        """
+        Given an alias, e.g. 'host', 'name', returns the Django field.
+        When the alias maps to several selectors (a multi-value alias), the
+        field of the first selector is returned; all selectors of such an
+        alias are expected to share the same field type.
+        """
+        selector = cls.get_selector_from_alias(alias)
+        if isinstance(selector, (list, tuple)):
+            selector = selector[0]
+        return cls.get_field_from_selector(selector)[1]
 
     @classmethod
     def get_field_handler_from_alias(cls, alias):
@@ -148,8 +180,7 @@ class Searchable(object):
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        selector = cls.get_selector_from_alias(alias)
-        field = cls.get_field_from_selector(selector)[1]
+        field = cls.get_field_from_alias(alias)
         return cls.get_field_handler_from_field(field)
 
     @classmethod
@@ -172,10 +203,28 @@ class Searchable(object):
 
             component__device__host
 
+        The selector may also be a list of selectors, when a single alias
+        maps to several relation paths (a multi-value alias).
+
+        An alias of the form ``<base>__<json-path>`` is also accepted when
+        ``<base>`` is itself a registered alias; in that case the JSON path
+        is appended to the base selector(s), e.g. ``metadata__loan_id`` ->
+        ``copies__metadata__loan_id``.
+
         @type name: str
         @param name: e.g. 'address', or 'name'
         """
-        return dict(cls.get_searchable())[alias]
+        searchable = dict(cls.get_searchable())
+        if alias in searchable:
+            return searchable[alias]
+        if '__' in alias:
+            base, path = alias.split('__', 1)
+            if base in searchable:
+                selector = searchable[base]
+                if isinstance(selector, (list, tuple)):
+                    return [s + '__' + path for s in selector]
+                return selector + '__' + path
+        raise KeyError(alias)
 
     @classmethod
     def get_object_vector_to(cls, search_cls):

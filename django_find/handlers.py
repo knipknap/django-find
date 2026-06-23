@@ -65,6 +65,13 @@ class DateTimeFieldHandler(FieldHandler):
     def handles(cls, model, field):
         return isinstance(field, models.DateTimeField)
 
+class JSONFieldHandler(FieldHandler):
+    db_type = 'JSON'
+
+    @classmethod
+    def handles(cls, model, field):
+        return isinstance(field, models.JSONField)
+
 type_registry = [
         LowerCaseStrFieldHandler,
         IPAddressFieldHandler,
@@ -72,4 +79,5 @@ type_registry = [
         IntegerFieldHandler,
         DateTimeFieldHandler,
         DateFieldHandler,
+        JSONFieldHandler,
 ]

@@ -187,3 +187,54 @@ Here is the full list of operators supported by **django-find**::
 	id<=5 -> Less than or equal
 	id=>5 -> Less than or equal
 	id<>5 -> Unequal
+
+Searching fields that have choices
+----------------------------------
+
+When a model field defines ``choices``, the database stores the short
+*code* while the user usually only knows the human-readable *label*.
+django-find lets you search by either one.
+
+A ``contains`` search (``:``) matches the label or the code as a
+case-insensitive substring and expands to every matching code. For
+example, given the choices ``HC = "Hardcover edition"``,
+``PB = "Paperback edition"`` and ``EB = "Ebook edition"``, the query::
+
+	format:edition
+
+matches all of ``HC``, ``PB`` and ``EB``. Searching by the raw code still
+works::
+
+	format:EB
+
+An ``equals`` search (``=``) requires a full, case-insensitive match of
+either the label or the code::
+
+	format="Ebook edition"   -> matches EB
+	format=EB                -> matches EB
+
+Negation works as expected and excludes every matching code::
+
+	format!:edition          -> excludes HC, PB and EB
+
+Searching JSON fields
+---------------------
+
+A ``JSONField`` can be searched either as a whole document or by a
+specific key path. To match anywhere in the stored document, search the
+field by its alias::
+
+	metadata:somevalue
+
+To search a specific key, append the key path to the alias using ``__``
+as the separator. Nested keys are chained the same way::
+
+	metadata__loan_id:123
+	metadata__borrower__name:alice
+
+The ``:`` operator matches the JSON value as a substring, while ``=``
+matches it exactly::
+
+	metadata__loan_id:12     -> matches 123, 1234, ...
+	metadata__loan_id=123    -> matches 123 only
+

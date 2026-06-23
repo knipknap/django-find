@@ -116,3 +116,72 @@ class Alarm(models.Model, Searchable):
 
     class Meta:
         app_label = 'search_tests'
+
+# ---------------------------------------------------------------------------
+# A small lending-library shape used to exercise three search features:
+#   * choice-label search   (format:edition -> HC/PB/EB),
+#   * JSON path / whole-document search (metadata__loan_id, metadata:value),
+#   * multi-value aliases that reach a copy either directly or via a
+#     collection (a Library's own copies, or the copies in its collections).
+#
+# Library    -- a lending library (the container).
+# Collection -- a themed grouping of copies within a library
+#               (Collection.library, related_name='collections').
+# Copy       -- a single copy of a book.
+#   Copy.library    (related_name='copies') -- held directly by the library,
+#   Copy.collection (related_name='copies') -- held within a collection.
+# ---------------------------------------------------------------------------
+LIBRARY_STATUS_CHOICES = [
+    ('O', 'Open'),
+    ('C', 'Closed'),
+    ('A', 'Archived'),
+]
+
+COPY_FORMAT_CHOICES = [
+    ('HC', 'Hardcover edition'),
+    ('PB', 'Paperback edition'),
+    ('EB', 'Ebook edition'),
+    ('AU', 'Audiobook'),
+]
+
+class Library(models.Model, Searchable):
+    status = models.CharField(max_length=1, choices=LIBRARY_STATUS_CHOICES)
+
+    searchable = [
+        ('status', 'status'),
+        ('format', ['copies__format', 'collections__copies__format']),
+        ('shelfmark', ['copies__shelfmark', 'collections__copies__shelfmark']),
+        ('metadata', ['copies__metadata', 'collections__copies__metadata']),
+    ]
+
+    class Meta:
+        app_label = 'search_tests'
+
+class Collection(models.Model, Searchable):
+    library = models.ForeignKey(Library, on_delete=models.CASCADE,
+                                related_name='collections')
+
+    searchable = [
+        ('library', 'library__id'),
+    ]
+
+    class Meta:
+        app_label = 'search_tests'
+
+class Copy(models.Model, Searchable):
+    collection = models.ForeignKey(Collection, null=True, blank=True,
+                                   on_delete=models.CASCADE, related_name='copies')
+    library = models.ForeignKey(Library, null=True, blank=True,
+                                on_delete=models.CASCADE, related_name='copies')
+    format = models.CharField(max_length=3, choices=COPY_FORMAT_CHOICES)
+    shelfmark = models.TextField()
+    metadata = models.JSONField(null=True, blank=True, default=None)
+
+    searchable = [
+        ('format', 'format'),
+        ('shelfmark', 'shelfmark'),
+        ('metadata', 'metadata'),
+    ]
+
+    class Meta:
+        app_label = 'search_tests'
